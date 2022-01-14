@@ -2,9 +2,8 @@ from setuptools import setup
 
 setup(
     name='customlib',
-    version='0.0.1',
+    version='1.0.0',
     packages=['customlib'],
-    url='',
     license='MIT License',
     author='Claudiu DRUG',
     author_email='claudiu.drug@outlook.com',
