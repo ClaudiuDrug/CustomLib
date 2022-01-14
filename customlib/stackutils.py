@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from os.path import basename
 # noinspection PyProtectedMember
 from sys import exc_info, _getframe as get_frame
+from os.path import basename
 from typing import Union
 
 from .constants import TRACEBACK, FRAME

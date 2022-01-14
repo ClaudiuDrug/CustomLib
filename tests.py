@@ -4,10 +4,10 @@ from os.path import dirname, realpath, join
 from sys import exit as sys_exit
 from uuid import uuid1
 
-from library import CfgParser
-from library import Logger
-from library import Cypher
-from library import FileHandle
+from customlib import CfgParser
+from customlib import Logger
+from customlib import Cypher
+from customlib import FileHandle
 
 if __name__ == '__main__':
 

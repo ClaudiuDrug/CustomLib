@@ -7,14 +7,12 @@ from threading import RLock
 from typing import Union
 
 from .cfgparser import CfgParser
-from .constants import DEFAULTS, LOGGER, ROW, TRACEBACK, FRAME
+from .constants import ROW, TRACEBACK, FRAME
 from .handles import FileHandle
 from .stackutils import info, get_level
 from .utils import timestamp, make_dirs, today
 
 cfg = CfgParser()
-cfg.set_defaults(**DEFAULTS)
-cfg.read_dict(dictionary=LOGGER, source="<logger>")
 
 
 class Handler(ABC):
@@ -118,7 +116,7 @@ class FileHandler(StreamHandler):
     def get_name(self):
         if (self._name is None) and (self._ext is None):
             self._name, self._ext = splitext(
-                cfg.get("LOGGER", "name")
+                cfg.get("LOGGER", "name", fallback="customlib.log")
             )
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
@@ -164,7 +162,7 @@ class BaseLogger(Handler):
     def __init__(self, config: Union[dict, CfgParser] = None):
         if config is not None:
             self.set_settings(config)
-        self._stream_handler = self._acquire(target=cfg.get("LOGGER", "handler"))
+        self._stream_handler = self._acquire(target=cfg.get("LOGGER", "handler", fallback="console"))
         self._row_factory = RowFactory()
 
     def _acquire(self, target):
@@ -192,7 +190,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if cfg.getboolean("LOGGER", "debug") is True:
+        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):
