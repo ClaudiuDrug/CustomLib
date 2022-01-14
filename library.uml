@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>Python</ID>
+  <OriginalElement>#D:/PyProjects/customlib/library</OriginalElement>
+  <nodes>
+    <node x="1277.5" y="307.98930921052624">abc.ABCMeta</node>
+    <node x="551.5" y="111.54961622807042">library.exceptions.KeyEncryptionError</node>
+    <node x="1624.5" y="695.9520285087722">typing.Sized</node>
+    <node x="587.5" y="766.5">library.cfgparser.CfgParser</node>
+    <node x="1594.5" y="593.9520285087722">library.locker.FileLock</node>
+    <node x="1618.0" y="644.9520285087722">typing.Iterator</node>
+    <node x="888.0" y="0.0">library.exceptions.BaseLockException</node>
+    <node x="1571.0" y="421.0">library.encryption.Symmetric</node>
+    <node x="273.0" y="264.5496162280704">library.logging.BaseLogger</node>
+    <node x="1617.0" y="797.9520285087722">typing.Iterable</node>
+    <node x="319.5" y="677.5">enum.IntFlag</node>
+    <node x="262.0" y="341.0496162280704">library.logging.StreamHandler</node>
+    <node x="1650.5" y="370.0">type</node>
+    <node x="972.0" y="458.1186951754388">enum.Enum</node>
+    <node x="1617.0" y="56.94407894736838">BaseException</node>
+    <node x="1266.5" y="437.88294956140373">enum.EnumMeta</node>
+    <node x="0.5" y="315.5496162280704">library.logging.StdHandler</node>
+    <node x="556.0" y="162.54961622807042">library.exceptions.PasswordGetError</node>
+    <node x="573.0" y="213.54961622807042">library.handles.AbstractHandle</node>
+    <node x="277.0" y="213.54961622807042">library.handles.FileHandle</node>
+    <node x="1583.0" y="542.9520285087722">library.encryption.Cypher</node>
+    <node x="888.0" y="56.94407894736838">library.exceptions.BadParameterError</node>
+    <node x="1979.0" y="836.5079495614038">typing.Hashable</node>
+    <node x="597.5" y="315.5496162280704">library.logging.Handler</node>
+    <node x="567.0" y="0.0">library.exceptions.LockException</node>
+    <node x="1229.5" y="358.98930921052624">library.locker.MetaSingleton</node>
+    <node x="1576.5" y="746.9520285087722">library.logging.RowFactory</node>
+    <node x="26.0" y="677.5">library.locker.LOCK</node>
+    <node x="14.5" y="264.5496162280704">library.logging.Logger</node>
+    <node x="1223.0" y="766.5">configparser.RawConfigParser</node>
+    <node x="1656.5" y="868.4520285087722">int</node>
+    <node x="1575.0" y="197.3686951754388">library.cfgparser.ArgsParser</node>
+    <node x="1289.5" y="56.94407894736838">Exception</node>
+    <node x="1577.0" y="319.0">library.encryption.KeyVault</node>
+    <node x="550.0" y="60.54961622807042">library.exceptions.KeyDecryptionError</node>
+    <node x="902.5" y="107.94407894736838">library.exceptions.BaseVaultError</node>
+    <node x="0.0" y="366.5496162280704">library.logging.FileHandler</node>
+    <node x="983.0" y="286.4440789473684">abc.ABC</node>
+    <node x="1610.5" y="491.9520285087722">typing.Container</node>
+    <node x="640.0" y="475.86430921052624">enum.Flag</node>
+    <node x="1849.0" y="418.0496162280704">object</node>
+    <node x="925.5" y="766.5">configparser.ConfigParser</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="library.encryption.KeyVault" target="object" relationship="REALIZATION">
+      <point x="106.0" y="0.0" />
+      <point x="1822.0" y="334.5" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="library.handles.AbstractHandle" target="abc.ABC" relationship="REALIZATION">
+      <point x="119.0" y="0.0" />
+      <point x="861.0" y="229.04961622807042" />
+      <point x="861.0" y="301.9440789473684" />
+      <point x="-45.5" y="0.0" />
+    </edge>
+    <edge source="configparser.RawConfigParser" target="typing.Sized" relationship="INTERFACE">
+      <point x="117.0" y="-7.75" />
+      <point x="1479.0" y="774.25" />
+      <point x="1479.0" y="726.3377192982459" />
+      <point x="1519.0" y="726.3377192982459" />
+      <point x="1519.0" y="711.4520285087722" />
+      <point x="-58.5" y="0.0" />
+    </edge>
+    <edge source="library.encryption.Symmetric" target="object" relationship="REALIZATION">
+      <point x="112.0" y="0.0" />
+      <point x="1822.0" y="436.5" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="library.cfgparser.CfgParser" target="configparser.ConfigParser" relationship="REALIZATION">
+      <point x="104.5" y="0.0" />
+      <point x="-103.0" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.BaseVaultError" target="Exception" relationship="REALIZATION">
+      <point x="126.0" y="0.0" />
+      <point x="1191.0" y="123.44407894736838" />
+      <point x="1191.0" y="72.44407894736838" />
+      <point x="-50.5" y="0.0" />
+    </edge>
+    <edge source="library.logging.StreamHandler" target="library.logging.Handler" relationship="REALIZATION">
+      <point x="118.0" y="0.0" />
+      <point x="524.0" y="356.5496162280704" />
+      <point x="524.0" y="331.0496162280704" />
+      <point x="-94.5" y="0.0" />
+    </edge>
+    <edge source="object" target="typing.Hashable" relationship="INTERFACE">
+      <point x="39.0" y="0.0" />
+      <point x="1953.0" y="433.5496162280704" />
+      <point x="1953.0" y="852.0079495614038" />
+      <point x="-71.5" y="0.0" />
+    </edge>
+    <edge source="enum.EnumMeta" target="typing.Iterator" relationship="INTERFACE">
+      <point x="73.5" y="7.75" />
+      <point x="1479.0" y="461.13294956140373" />
+      <point x="1479.0" y="675.3377192982459" />
+      <point x="1499.0" y="675.3377192982459" />
+      <point x="1499.0" y="660.4520285087722" />
+      <point x="-65.0" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.BaseLockException" target="Exception" relationship="REALIZATION">
+      <point x="140.5" y="0.0" />
+      <point x="1191.0" y="15.5" />
+      <point x="1191.0" y="72.44407894736838" />
+      <point x="-50.5" y="0.0" />
+    </edge>
+    <edge source="enum.Flag" target="enum.Enum" relationship="REALIZATION">
+      <point x="52.0" y="-8.0" />
+      <point x="-56.5" y="9.745614035087442" />
+    </edge>
+    <edge source="library.logging.StdHandler" target="library.logging.StreamHandler" relationship="REALIZATION">
+      <point x="105.5" y="0.0" />
+      <point x="237.0" y="331.0496162280704" />
+      <point x="237.0" y="356.5496162280704" />
+      <point x="-118.0" y="0.0" />
+    </edge>
+    <edge source="int" target="object" relationship="REALIZATION">
+      <point x="26.5" y="-7.75" />
+      <point x="1822.0" y="876.2020285087722" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="type" target="object" relationship="REALIZATION">
+      <point x="32.5" y="0.0" />
+      <point x="1822.0" y="385.5" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="enum.EnumMeta" target="typing.Iterable" relationship="INTERFACE">
+      <point x="73.5" y="7.75" />
+      <point x="1479.0" y="461.13294956140373" />
+      <point x="1479.0" y="675.3377192982459" />
+      <point x="1539.0" y="675.3377192982459" />
+      <point x="1539.0" y="813.4520285087722" />
+      <point x="-66.0" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.BadParameterError" target="Exception" relationship="REALIZATION">
+      <point x="140.5" y="0.0" />
+      <point x="-50.5" y="0.0" />
+    </edge>
+    <edge source="configparser.RawConfigParser" target="typing.Iterator" relationship="INTERFACE">
+      <point x="117.0" y="-7.75" />
+      <point x="1479.0" y="774.25" />
+      <point x="1479.0" y="726.3377192982459" />
+      <point x="1509.0" y="726.3377192982459" />
+      <point x="1509.0" y="660.4520285087722" />
+      <point x="-65.0" y="0.0" />
+    </edge>
+    <edge source="configparser.RawConfigParser" target="typing.Iterable" relationship="INTERFACE">
+      <point x="117.0" y="-7.75" />
+      <point x="1479.0" y="774.25" />
+      <point x="1479.0" y="726.3377192982459" />
+      <point x="1529.0" y="726.3377192982459" />
+      <point x="1529.0" y="813.4520285087722" />
+      <point x="-66.0" y="0.0" />
+    </edge>
+    <edge source="library.logging.Logger" target="library.logging.BaseLogger" relationship="REALIZATION">
+      <point x="91.5" y="0.0" />
+      <point x="-107.0" y="0.0" />
+    </edge>
+    <edge source="library.logging.FileHandler" target="library.logging.StreamHandler" relationship="REALIZATION">
+      <point x="106.0" y="0.0" />
+      <point x="237.0" y="382.0496162280704" />
+      <point x="237.0" y="356.5496162280704" />
+      <point x="-118.0" y="0.0" />
+    </edge>
+    <edge source="library.logging.RowFactory" target="object" relationship="REALIZATION">
+      <point x="106.5" y="0.0" />
+      <point x="1822.0" y="762.4520285087722" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="enum.EnumMeta" target="type" relationship="REALIZATION">
+      <point x="73.5" y="-7.75" />
+      <point x="1479.0" y="445.63294956140373" />
+      <point x="1479.0" y="385.5" />
+      <point x="-32.5" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.LockException" target="library.exceptions.BaseLockException" relationship="REALIZATION">
+      <point x="125.0" y="0.0" />
+      <point x="-140.5" y="0.0" />
+    </edge>
+    <edge source="library.cfgparser.ArgsParser" target="object" relationship="REALIZATION">
+      <point x="108.0" y="0.0" />
+      <point x="1822.0" y="212.8686951754388" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="configparser.ConfigParser" target="configparser.RawConfigParser" relationship="REALIZATION">
+      <point x="103.0" y="0.0" />
+      <point x="-117.0" y="0.0" />
+    </edge>
+    <edge source="BaseException" target="object" relationship="REALIZATION">
+      <point x="66.0" y="0.0" />
+      <point x="1822.0" y="72.44407894736838" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.KeyDecryptionError" target="library.exceptions.BaseVaultError" relationship="REALIZATION">
+      <point x="142.0" y="0.0" />
+      <point x="861.0" y="76.04961622807042" />
+      <point x="861.0" y="123.44407894736838" />
+      <point x="-126.0" y="0.0" />
+    </edge>
+    <edge source="enum.Enum" target="typing.Hashable" relationship="INTERFACE">
+      <point x="0.0" y="-15.5" />
+      <point x="1028.5" y="439.4520285087722" />
+      <point x="-17.5" y="439.4520285087722" />
+      <point x="-17.5" y="916.9520285087722" />
+      <point x="2050.5" y="916.9520285087722" />
+      <point x="0.0" y="15.5" />
+    </edge>
+    <edge source="library.handles.FileHandle" target="library.handles.AbstractHandle" relationship="REALIZATION">
+      <point x="103.0" y="0.0" />
+      <point x="-119.0" y="0.0" />
+    </edge>
+    <edge source="enum.EnumMeta" target="typing.Sized" relationship="INTERFACE">
+      <point x="73.5" y="7.75" />
+      <point x="1479.0" y="461.13294956140373" />
+      <point x="1479.0" y="675.3377192982459" />
+      <point x="1549.0" y="675.3377192982459" />
+      <point x="1549.0" y="711.4520285087722" />
+      <point x="-58.5" y="0.0" />
+    </edge>
+    <edge source="enum.Flag" target="typing.Container" relationship="INTERFACE">
+      <point x="52.0" y="7.75" />
+      <point x="861.0" y="499.11430921052624" />
+      <point x="861.0" y="507.4520285087722" />
+      <point x="-72.5" y="0.0" />
+    </edge>
+    <edge source="enum.IntFlag" target="int" relationship="REALIZATION">
+      <point x="60.5" y="0.0" />
+      <point x="524.0" y="693.0" />
+      <point x="524.0" y="883.9520285087722" />
+      <point x="-26.5" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.KeyEncryptionError" target="library.exceptions.BaseVaultError" relationship="REALIZATION">
+      <point x="140.5" y="0.0" />
+      <point x="861.0" y="127.04961622807042" />
+      <point x="861.0" y="123.44407894736838" />
+      <point x="-126.0" y="0.0" />
+    </edge>
+    <edge source="library.locker.LOCK" target="enum.IntFlag" relationship="REALIZATION">
+      <point x="80.0" y="0.0" />
+      <point x="-60.5" y="0.0" />
+    </edge>
+    <edge source="abc.ABC" target="object" relationship="REALIZATION">
+      <point x="45.5" y="-7.75" />
+      <point x="1191.0" y="294.1940789473684" />
+      <point x="1191.0" y="288.9440789473684" />
+      <point x="1822.0" y="288.9440789473684" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="library.locker.FileLock" target="object" relationship="REALIZATION">
+      <point x="88.5" y="0.0" />
+      <point x="1822.0" y="609.4520285087722" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="enum.IntFlag" target="enum.Flag" relationship="REALIZATION">
+      <point x="60.5" y="0.0" />
+      <point x="524.0" y="693.0" />
+      <point x="524.0" y="491.36430921052624" />
+      <point x="-52.0" y="0.0" />
+    </edge>
+    <edge source="library.logging.BaseLogger" target="library.logging.Handler" relationship="REALIZATION">
+      <point x="107.0" y="0.0" />
+      <point x="524.0" y="280.0496162280704" />
+      <point x="524.0" y="331.0496162280704" />
+      <point x="-94.5" y="0.0" />
+    </edge>
+    <edge source="configparser.RawConfigParser" target="object" relationship="REALIZATION">
+      <point x="117.0" y="7.75" />
+      <point x="1479.0" y="789.75" />
+      <point x="1479.0" y="839.4520285087722" />
+      <point x="1822.0" y="839.4520285087722" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="library.locker.MetaSingleton" target="type" relationship="REALIZATION">
+      <point x="110.5" y="0.0" />
+      <point x="1479.0" y="374.48930921052624" />
+      <point x="1479.0" y="385.5" />
+      <point x="-32.5" y="0.0" />
+    </edge>
+    <edge source="enum.EnumMeta" target="typing.Container" relationship="INTERFACE">
+      <point x="73.5" y="7.75" />
+      <point x="1479.0" y="461.13294956140373" />
+      <point x="1479.0" y="675.3377192982459" />
+      <point x="1489.0" y="675.3377192982459" />
+      <point x="1489.0" y="507.4520285087722" />
+      <point x="-72.5" y="0.0" />
+    </edge>
+    <edge source="library.exceptions.PasswordGetError" target="library.exceptions.BaseVaultError" relationship="REALIZATION">
+      <point x="136.0" y="0.0" />
+      <point x="861.0" y="178.04961622807042" />
+      <point x="861.0" y="123.44407894736838" />
+      <point x="-126.0" y="0.0" />
+    </edge>
+    <edge source="enum.Enum" target="object" relationship="REALIZATION">
+      <point x="48.5" y="-15.5" />
+      <point x="1077.0" y="414.0" />
+      <point x="-28.0" y="414.0" />
+      <point x="-28.0" y="-13.0" />
+      <point x="1888.0" y="-13.0" />
+      <point x="0.0" y="-15.5" />
+    </edge>
+    <edge source="abc.ABC" target="abc.ABCMeta" relationship="INSTANCEOF">
+      <point x="45.5" y="7.75" />
+      <point x="1191.0" y="309.6940789473684" />
+      <point x="1191.0" y="323.48930921052624" />
+      <point x="-62.5" y="0.0" />
+    </edge>
+    <edge source="abc.ABCMeta" target="type" relationship="REALIZATION">
+      <point x="62.5" y="0.0" />
+      <point x="1479.0" y="323.48930921052624" />
+      <point x="1479.0" y="385.5" />
+      <point x="-32.5" y="0.0" />
+    </edge>
+    <edge source="enum.Enum" target="enum.EnumMeta" relationship="INSTANCEOF">
+      <point x="56.5" y="-8.0" />
+      <point x="-73.5" y="12.235745614035068" />
+    </edge>
+    <edge source="int" target="typing.Hashable" relationship="INTERFACE">
+      <point x="26.5" y="7.75" />
+      <point x="1953.0" y="891.7020285087722" />
+      <point x="1953.0" y="852.0079495614038" />
+      <point x="-71.5" y="0.0" />
+    </edge>
+    <edge source="library.logging.Handler" target="abc.ABC" relationship="REALIZATION">
+      <point x="94.5" y="0.0" />
+      <point x="861.0" y="331.0496162280704" />
+      <point x="861.0" y="301.9440789473684" />
+      <point x="-45.5" y="0.0" />
+    </edge>
+    <edge source="library.encryption.Cypher" target="object" relationship="REALIZATION">
+      <point x="100.0" y="0.0" />
+      <point x="1822.0" y="558.4520285087722" />
+      <point x="1822.0" y="433.5496162280704" />
+      <point x="-39.0" y="0.0" />
+    </edge>
+    <edge source="Exception" target="BaseException" relationship="REALIZATION">
+      <point x="50.5" y="0.0" />
+      <point x="-66.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic" zoom="1.0" showDependencies="false" x="1047.0" y="452.0" />
+  <SelectedNodes>
+    <node>enum.Enum</node>
+  </SelectedNodes>
+  <Categories />
+</Diagram>
+
