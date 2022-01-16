@@ -5,7 +5,7 @@ from os import fsync
 from threading import RLock
 from typing import IO
 
-from .locker import FileLock
+from ..locking import FileLock
 
 
 class AbstractHandle(ABC):

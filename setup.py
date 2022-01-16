@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='customlib',
-    version='1.0.0',
+    version='2.0.0',
     packages=['customlib'],
     license='MIT License',
     author='Claudiu DRUG',

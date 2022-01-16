@@ -1,20 +1,35 @@
 # -*- coding: UTF-8 -*-
 
-from configparser import ConfigParser, ExtendedInterpolation
+from configparser import ConfigParser
+from configparser import ExtendedInterpolation
 from os.path import isfile
 from sys import argv
 from typing import Generator, Sequence
 
+from .converters import CONVERTERS
 from .exceptions import BadParameterError
-from .handles import FileHandle
-from .utils import ensure_folder, evaluate
+from ..handles import FileHandle
+from ..utils import ensure_folder
 
-CONVERTERS = {
-    "list": evaluate,
-    "tuple": evaluate,
-    "set": evaluate,
-    "dict": evaluate,
-}
+
+def new_config(**kwargs):
+    """
+    Create and return a new CfgParser instance.
+
+    :param kwargs: It will be passed along to the CfgParser class.
+    :return: A new CfgParser instance.
+    """
+
+    if "converters" in kwargs:
+        CONVERTERS.update(kwargs.pop("converters"))
+    _interpolation = kwargs.pop("interpolation", ExtendedInterpolation())
+
+    parser = CfgParser(
+        interpolation=_interpolation,
+        converters=CONVERTERS,
+        **kwargs
+    )
+    return parser
 
 
 class ArgsParser(object):
@@ -61,11 +76,8 @@ class ArgsParser(object):
 class CfgParser(ConfigParser):
     """Configuration handle."""
 
-    def __init__(self):
-        super(CfgParser, self).__init__(
-            interpolation=ExtendedInterpolation(),
-            converters=CONVERTERS
-        )
+    def __init__(self, *args, **kwargs):
+        super(CfgParser, self).__init__(*args, **kwargs)
         self._parser = ArgsParser()
 
     def parse(self, args: Sequence[str] = None):

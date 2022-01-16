@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-from ast import literal_eval
 from datetime import datetime, timezone, date
 from os import makedirs
 from os.path import dirname, realpath, isdir
@@ -52,13 +51,4 @@ def decode(value: Union[bytes, str]) -> str:
     """Decode the bytes-like object `value` with UTF-8."""
     if isinstance(value, bytes) is True:
         value = value.decode("UTF-8")
-    return value
-
-
-def evaluate(value: str):
-    """Transform a string to an appropriate data type."""
-    try:
-        value = literal_eval(value)
-    except (SyntaxError, ValueError):
-        pass
     return value

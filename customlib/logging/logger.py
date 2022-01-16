@@ -6,13 +6,13 @@ from sys import stdout
 from threading import RLock
 from typing import Union
 
-from .cfgparser import CfgParser
-from .constants import ROW, TRACEBACK, FRAME
-from .handles import FileHandle
-from .stackutils import info, get_level
-from .utils import timestamp, make_dirs, today
+from .constants import ROW
+from ..callstack import TRACEBACK, FRAME, info, get_level
+from ..config import CfgParser, new_config
+from ..handles import FileHandle
+from ..utils import timestamp, make_dirs, today
 
-cfg = CfgParser()
+CFG: CfgParser
 
 
 class Handler(ABC):
@@ -74,7 +74,7 @@ class FileHandler(StreamHandler):
     def make_folder():
         date = today()
         path = join(
-            cfg.get("FOLDERS", "logger"),
+            CFG.get("FOLDERS", "logger"),
             str(date.year),
             date.strftime("%B").lower(),
         )
@@ -116,7 +116,7 @@ class FileHandler(StreamHandler):
     def get_name(self):
         if (self._name is None) and (self._ext is None):
             self._name, self._ext = splitext(
-                cfg.get("LOGGER", "name", fallback="customlib.log")
+                CFG.get("LOGGER", "name", fallback="customlib.log")
             )
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
@@ -151,18 +151,20 @@ class BaseLogger(Handler):
     }
 
     @staticmethod
-    def set_settings(config: Union[dict, CfgParser]):
+    def set_settings(config: Union[CfgParser, dict]):
         """Set the logging configuration parameters."""
-        global cfg
-        if isinstance(config, dict) is True:
-            cfg.read_dict(dictionary=config, source=f"<logger>")
-        elif isinstance(config, CfgParser) is True:
-            cfg = config
-
-    def __init__(self, config: Union[dict, CfgParser] = None):
+        global CFG
         if config is not None:
-            self.set_settings(config)
-        self._stream_handler = self._acquire(target=cfg.get("LOGGER", "handler", fallback="console"))
+            if isinstance(config, CfgParser):
+                CFG = config
+            else:
+                CFG.read_dict(dictionary=config, source="<logger>")
+        else:
+            CFG = new_config()
+
+    def __init__(self, config: Union[CfgParser, dict] = None):
+        self.set_settings(config)
+        self._stream_handler = self._acquire(target=CFG.get("LOGGER", "handler", fallback="console"))
         self._row_factory = RowFactory()
 
     def _acquire(self, target):
@@ -190,7 +192,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
+        if CFG.getboolean("LOGGER", "debug", fallback=False) is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):

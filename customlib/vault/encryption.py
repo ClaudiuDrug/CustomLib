@@ -9,11 +9,8 @@ from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from keyring import set_password, get_password, delete_password
-from keyring.errors import PasswordSetError, PasswordDeleteError
 
-from .exceptions import PasswordGetError
-from .utils import decode, encode
+from ..utils import decode, encode
 
 
 class Symmetric(object):
@@ -72,39 +69,3 @@ class Cypher(object):
             return decode(self.__cypher(self.__key).decrypt(encode(value)))
         except InvalidToken as invalid_token:
             raise invalid_token
-
-
-class KeyVault(object):
-    """KeyRing interface."""
-
-    def __init__(self):
-        self.cypher = Cypher()
-
-    def get_password(self, service: str, username: str) -> str:
-        """Fetch & decrypt a password from the keyring."""
-        try:
-            password = get_password(service, username)
-        except PasswordGetError as pwd_get_error:
-            raise pwd_get_error
-        else:
-            if password is not None:
-                try:
-                    return self.cypher.decrypt(password)
-                except InvalidToken as invalid_token:
-                    raise invalid_token
-
-    def set_password(self, service: str, username: str, password: str):
-        """Encrypt & store a password into the keyring."""
-        password = self.cypher.encrypt(password)
-        try:
-            set_password(service_name=service, username=username, password=password)
-        except PasswordSetError as pwd_set_error:
-            raise pwd_set_error
-
-    @staticmethod
-    def del_password(service: str, username: str):
-        """Delete a password from the keystore."""
-        try:
-            delete_password(service_name=service, username=username)
-        except PasswordDeleteError as pwd_del_error:
-            raise pwd_del_error

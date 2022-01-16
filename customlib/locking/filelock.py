@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 from enum import IntFlag
-from functools import wraps
 from msvcrt import LK_NBLCK, LK_LOCK, LK_NBRLCK, LK_RLCK, locking
 from msvcrt import LK_UNLCK
 from sys import version_info
@@ -14,7 +13,6 @@ from win32con import LOCKFILE_FAIL_IMMEDIATELY
 from win32file import LockFileEx, UnlockFileEx, _get_osfhandle
 from winerror import ERROR_NOT_LOCKED, ERROR_LOCK_VIOLATION
 
-from .constants import INSTANCES
 from .exceptions import LockException
 
 
@@ -23,34 +21,6 @@ class LOCK(IntFlag):
     SH = 0x2       # shared lock
     NB = 0x4       # non-blocking
     UN = LK_UNLCK  # unlock
-
-
-def singleton(cls):
-    """
-    Singleton decorator (for metaclass).
-    Restrict object to only one instance per runtime.
-    """
-
-    @wraps(cls)
-    def wrapper(*args, **kwargs):
-        if cls not in INSTANCES:
-            # a strong reference to the object is required.
-            instance = cls(*args, **kwargs)
-            INSTANCES[cls] = instance
-        return INSTANCES[cls]
-    return wrapper
-
-
-class MetaSingleton(type):
-    """
-    Singleton metaclass (for non-strict class).
-    Restrict object to only one instance per runtime.
-    """
-
-    def __call__(cls, *args, **kwargs):
-        if hasattr(cls, "_instance") is False:
-            cls._instance = super(MetaSingleton, cls).__call__(*args, **kwargs)
-        return cls._instance
 
 
 class FileLock(object):
