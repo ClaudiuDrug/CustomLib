@@ -1,35 +1,21 @@
 # -*- coding: UTF-8 -*-
 
-from configparser import ConfigParser
-from configparser import ExtendedInterpolation
+from configparser import ConfigParser, ExtendedInterpolation
 from os.path import isfile
 from sys import argv
-from typing import Generator, Sequence
+from typing import Sequence, Generator
 
-from .converters import CONVERTERS
 from .exceptions import BadParameterError
-from ..handles import FileHandle
-from ..utils import ensure_folder
+from .handles import FileHandle
+from .utils import ensure_folder, evaluate, singleton
 
-
-def new_config(**kwargs):
-    """
-    Create and return a new CfgParser instance.
-
-    :param kwargs: It will be passed along to the CfgParser class.
-    :return: A new CfgParser instance.
-    """
-
-    if "converters" in kwargs:
-        CONVERTERS.update(kwargs.pop("converters"))
-    _interpolation = kwargs.pop("interpolation", ExtendedInterpolation())
-
-    parser = CfgParser(
-        interpolation=_interpolation,
-        converters=CONVERTERS,
-        **kwargs
-    )
-    return parser
+INTERPOLATION = ExtendedInterpolation()
+CONVERTERS: dict = {
+    "list": evaluate,
+    "tuple": evaluate,
+    "set": evaluate,
+    "dict": evaluate,
+}
 
 
 class ArgsParser(object):
@@ -76,8 +62,17 @@ class ArgsParser(object):
 class CfgParser(ConfigParser):
     """Configuration handle."""
 
-    def __init__(self, *args, **kwargs):
-        super(CfgParser, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        global INTERPOLATION, CONVERTERS
+        if "interpolation" is kwargs:
+            INTERPOLATION = kwargs.pop("interpolation")
+        if "converters" in kwargs:
+            CONVERTERS.update(kwargs.pop("converters"))
+        super(CfgParser, self).__init__(
+            interpolation=INTERPOLATION,
+            converters=CONVERTERS,
+            **kwargs
+        )
         self._parser = ArgsParser()
 
     def parse(self, args: Sequence[str] = None):
@@ -114,3 +109,8 @@ class CfgParser(ConfigParser):
         ensure_folder(file_path)
         with FileHandle(file_path, "w", encoding=encoding) as file_handle:
             self.write(file_handle)
+
+
+@singleton
+class CfgSingleton(CfgParser):
+    """ConfigParser singleton."""

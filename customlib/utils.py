@@ -1,9 +1,41 @@
 # -*- coding: UTF-8 -*-
 
+from ast import literal_eval
 from datetime import datetime, timezone, date
-from os import makedirs
+from functools import wraps
+from os import makedirs, getenv
 from os.path import dirname, realpath, isdir
 from typing import Union
+
+from .constants import INSTANCES
+
+
+class MetaSingleton(type):
+    """
+    Singleton metaclass (for non-strict class).
+    Restrict object to only one instance per runtime.
+    """
+
+    def __call__(cls, *args, **kwargs):
+        if hasattr(cls, "_instance") is False:
+            cls._instance = super(MetaSingleton, cls).__call__(*args, **kwargs)
+        return cls._instance
+
+
+def singleton(cls):
+    """
+    Singleton decorator (for metaclass).
+    Restrict object to only one instance per runtime.
+    """
+
+    @wraps(cls)
+    def wrapper(*args, **kwargs):
+        if cls not in INSTANCES:
+            # a strong reference to the object is required.
+            instance = cls(*args, **kwargs)
+            INSTANCES[cls] = instance
+        return INSTANCES[cls]
+    return wrapper
 
 
 def today():
@@ -21,6 +53,12 @@ def get_local() -> datetime:
     """:returns: an aware localized datetime object."""
     utc = get_utc()
     return utc.astimezone()
+
+
+def get_posix():
+    """POSIX timestamp as float. Number of seconds since Unix Epoch in UTC."""
+    utc = get_utc()
+    return utc.timestamp()
 
 
 def get_utc() -> datetime:
@@ -52,3 +90,17 @@ def decode(value: Union[bytes, str]) -> str:
     if isinstance(value, bytes) is True:
         value = value.decode("UTF-8")
     return value
+
+
+def evaluate(value: str):
+    """Transform a string to an appropriate data type."""
+    try:
+        value = literal_eval(value)
+    except (SyntaxError, ValueError):
+        pass
+    return value
+
+
+def get_path() -> str:
+    """Get the root directory of the project."""
+    return getenv("PYTHONPATH").split(";")[0]

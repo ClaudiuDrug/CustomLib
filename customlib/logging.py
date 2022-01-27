@@ -6,13 +6,13 @@ from sys import stdout
 from threading import RLock
 from typing import Union
 
-from .constants import ROW
-from ..callstack import TRACEBACK, FRAME, info, get_level
-from ..config import CfgParser, new_config
-from ..handles import FileHandle
-from ..utils import timestamp, make_dirs, today
+from .callstack import info, get_level
+from .cfgparser import CfgSingleton
+from .constants import ROW, TRACEBACK, FRAME
+from .handles import FileHandle
+from .utils import timestamp, make_dirs, today, singleton
 
-CFG: CfgParser
+cfg = CfgSingleton()
 
 
 class Handler(ABC):
@@ -74,7 +74,7 @@ class FileHandler(StreamHandler):
     def make_folder():
         date = today()
         path = join(
-            CFG.get("FOLDERS", "logger"),
+            cfg.get("FOLDERS", "logger"),
             str(date.year),
             date.strftime("%B").lower(),
         )
@@ -115,9 +115,7 @@ class FileHandler(StreamHandler):
 
     def get_name(self):
         if (self._name is None) and (self._ext is None):
-            self._name, self._ext = splitext(
-                CFG.get("LOGGER", "name", fallback="customlib.log")
-            )
+            self._name, self._ext = splitext(cfg.get("LOGGER", "name", fallback="custom-lib.log"))
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
     def get_idx(self):
@@ -145,31 +143,18 @@ class StdHandler(StreamHandler):
 class BaseLogger(Handler):
     """Base logging handler."""
 
-    _handlers = {
-        "file": FileHandler,
+    _handlers: dict = {
         "console": StdHandler,
+        "file": FileHandler,
     }
 
-    @staticmethod
-    def set_settings(config: Union[CfgParser, dict]):
-        """Set the logging configuration parameters."""
-        global CFG
-        if config is not None:
-            if isinstance(config, CfgParser):
-                CFG = config
-            else:
-                CFG.read_dict(dictionary=config, source="<logger>")
-        else:
-            CFG = new_config()
-
-    def __init__(self, config: Union[CfgParser, dict] = None):
-        self.set_settings(config)
-        self._stream_handler = self._acquire(target=CFG.get("LOGGER", "handler", fallback="console"))
+    def __init__(self):
+        self._stream_handler = None
         self._row_factory = RowFactory()
 
-    def _acquire(self, target):
-        _handler = self._handlers.get(target)
-        return _handler()
+    def get_stream(self, target: str):
+        handler = self._handlers.get(target)
+        return handler()
 
     def set_stream(self, handler: Union[StdHandler, FileHandler]):
         """Set the handler to output log messages."""
@@ -177,6 +162,10 @@ class BaseLogger(Handler):
 
     def emit(self, message: str, exception: Union[BaseException, tuple, bool]):
         """Construct the row object and emit using the stream handler."""
+
+        if self._stream_handler is None:
+            self._stream_handler = self.get_stream(cfg.get("LOGGER", "handler", fallback="console"))
+
         with self._thread_lock:
             row = self._row_factory.build(message, exception)
             self._stream_handler.emit(row)
@@ -192,7 +181,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if CFG.getboolean("LOGGER", "debug", fallback=False) is True:
+        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):
@@ -221,3 +210,8 @@ class Logger(BaseLogger):
         :param exception: Add exception info to the log message.
         """
         self.emit(message=message, exception=exception)
+
+
+@singleton
+class LogSingleton(Logger):
+    """Logging singleton."""
