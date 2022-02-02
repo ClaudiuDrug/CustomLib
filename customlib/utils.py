@@ -4,8 +4,9 @@ from ast import literal_eval
 from datetime import datetime, timezone, date
 from functools import wraps
 from os import makedirs, getenv
-from os.path import dirname, realpath, isdir
-from typing import Union
+from os.path import dirname, realpath, isdir, basename
+from typing import Union, Generator
+from zipfile import ZipFile
 
 from .constants import INSTANCES
 
@@ -104,3 +105,15 @@ def evaluate(value: str):
 def get_path() -> str:
     """Get the root directory of the project."""
     return getenv("PYTHONPATH").split(";")[0]
+
+
+def archive(file_path: str, data: Union[Generator, str]):
+    """Archive `data` to the given `file_path`."""
+    with ZipFile(file_path, "w") as zip_handle:
+        if isinstance(data, Generator) is True:
+            for file in data:
+                path, name = file, basename(file)
+                zip_handle.write(path, name)
+        else:
+            path, name = data, basename(data)
+            zip_handle.write(path, name)

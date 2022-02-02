@@ -1,7 +1,11 @@
 # -*- coding: UTF-8 -*-
 
 from abc import ABC, abstractmethod
+from atexit import register
+from glob import glob
+from os import walk
 from os.path import join, exists, splitext
+from shutil import rmtree
 from sys import stdout
 from threading import RLock
 from typing import Union
@@ -10,9 +14,31 @@ from .callstack import info, get_level
 from .cfgparser import CfgSingleton
 from .constants import ROW, TRACEBACK, FRAME
 from .handles import FileHandle
-from .utils import timestamp, make_dirs, today, singleton
+from .utils import timestamp, make_dirs, today, singleton, archive
 
 cfg = CfgSingleton()
+
+
+@register
+def _cleanup():
+    target = cfg.get("FOLDERS", "logger")
+    folders = _scan(target)
+    for folder, files in folders:
+        archive(f"{folder}.zip", files)
+        rmtree(folder)
+
+
+def _scan(target: str):
+    current_month = today().strftime("%B").lower()
+    for root, folders, files in walk(target):
+        if (root == target) or (len(folders) == 0):
+            continue
+        for folder in folders:
+            if folder == current_month:
+                continue
+            folder = join(root, folder)
+            files = join(folder, "*.log")
+            yield folder, (file for file in glob(files))
 
 
 class Handler(ABC):
@@ -72,11 +98,11 @@ class FileHandler(StreamHandler):
 
     @staticmethod
     def make_folder():
-        date = today()
+        _date = today()
         path = join(
             cfg.get("FOLDERS", "logger"),
-            str(date.year),
-            date.strftime("%B").lower(),
+            str(_date.year),
+            _date.strftime("%B").lower(),
         )
         make_dirs(path)
         return path

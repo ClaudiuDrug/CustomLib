@@ -10,7 +10,11 @@ if __name__ == '__main__':
     cfg = CfgSingleton()  # one instance per runtime
     cfg.set_defaults(**DEFAULTS)
     cfg.open(file_path=CONFIG, encoding="UTF-8", fallback=BACKUP)
-    cfg.parse()  # we're parsing cmd-line arguments
+
+    # we're parsing cmd-line arguments
+    cfg.parse()
+
+    # we can also do this...
     # cfg.parse(["--logger-debug", "True", "--logger-handler", "console"])
 
     log = LogSingleton()  # one instance per runtime
