@@ -7,38 +7,55 @@ A few tools for day to day work.
 ## Available tools:
 
 <details>
-<summary>CfgParser & CfgSingleton</summary>
+<summary>CfgParser</summary>
 <p>
 
 ```python
-from customlib import DEFAULTS, CONFIG, BACKUP
+from configparser import ExtendedInterpolation
+
 from customlib.cfgparser import CfgParser
+from customlib import CONVERTERS
 
+cfg = CfgParser(
+    interpolation=ExtendedInterpolation(),
+    converters=CONVERTERS
+)
+```
 
-cfg = CfgParser()
+or
+
+```python
+from os import getcwd
+from os.path import join
+
+# shared instance of CfgParser
+from customlib import cfg
+
+DIRECTORY: str = getcwd()
+CONFIG: str = join(DIRECTORY, "config.ini")
+DEFAULTS: dict = {"directory": DIRECTORY}
+
+# fallback configuration
+BACKUP: dict = {
+    "SECTION": {
+        "option": "value",
+    }
+}
+
+# feed configuration parameters
 cfg.set_defaults(**DEFAULTS)
 cfg.open(file_path=CONFIG, encoding="UTF-8", fallback=BACKUP)
-cfg.parse()  # we're also parsing cmd-line args
+
+# we're parsing cmd-line arguments
+cfg.parse()
+
+# we can also do this...
+# cfg.parse(["--logger-debug", "True", "--logger-handler", "console"])
 ```
 
 - `DEFAULTS` - Holds `ConfigParser`'s default section parameters.
 - `CONFIG` - Is the configuration file set by default to your project's path.
 - `BACKUP` - Is the configuration default dictionary to which we fallback if the config file does not exist.
-
-If we need to have only one instance of `CfgParser` per runtime we can use the `CfgSingleton` class
-which makes use of the `singleton` design pattern and allows us to share configuration parameters
-across all our python modules / packages. It is first instantiated in the `logging` module as we share
-the configuration params and is referenced in `__init__.py` as simply `cfg`.
-
-```python
-from customlib import DEFAULTS, CONFIG, BACKUP
-from customlib import cfg
-
-
-cfg.set_defaults(**DEFAULTS)
-cfg.open(file_path=CONFIG, encoding="UTF-8", fallback=BACKUP)
-cfg.parse()  # we're also parsing cmd-line args
-```
 
 Because it inherits from `ConfigParser` and with the help of some extra-converters we now have
 four extra methods to use in our advantage.

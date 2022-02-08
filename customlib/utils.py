@@ -3,7 +3,7 @@
 from ast import literal_eval
 from datetime import datetime, timezone, date
 from functools import wraps
-from os import makedirs, getenv
+from os import makedirs
 from os.path import dirname, realpath, isdir, basename
 from typing import Union, Generator
 from zipfile import ZipFile
@@ -100,11 +100,6 @@ def evaluate(value: str):
     except (SyntaxError, ValueError):
         pass
     return value
-
-
-def get_path() -> str:
-    """Get the root directory of the project."""
-    return getenv("PYTHONPATH").split(";")[0]
 
 
 def archive(file_path: str, data: Union[Generator, str]):

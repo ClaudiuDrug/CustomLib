@@ -1,17 +1,21 @@
 # -*- coding: UTF-8 -*-
 
-from os.path import join
+from configparser import ExtendedInterpolation
 
-from .cfgparser import CfgSingleton
-from .constants import DEFAULTS, BACKUP
-from .logging import LogSingleton
-from .utils import get_path
+from .cfgparser import CfgParser
+from .logging import Logger
+from .utils import evaluate
 
-DEFAULTS.update({"directory": get_path()})
-CONFIG: str = join(DEFAULTS.get("directory"), "config", "config.ini")
+CONVERTERS: dict = {
+    "list": evaluate,
+    "tuple": evaluate,
+    "set": evaluate,
+    "dict": evaluate,
+}
 
-cfg = CfgSingleton()
-cfg.set_defaults(**DEFAULTS)
-cfg.read_dict(dictionary=BACKUP, source="<backup>")
+cfg = CfgParser(
+    interpolation=ExtendedInterpolation(),
+    converters=CONVERTERS
+)
 
-log = LogSingleton()
+log = Logger(config=cfg)

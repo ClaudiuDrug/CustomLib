@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from atexit import register
+from configparser import ConfigParser, ExtendedInterpolation, NoSectionError, NoOptionError
 from glob import glob
 from os import walk
 from os.path import join, exists, splitext
@@ -11,21 +12,24 @@ from threading import RLock
 from typing import Union
 
 from .callstack import info, get_level
-from .cfgparser import CfgSingleton
 from .constants import ROW, TRACEBACK, FRAME
 from .handles import FileHandle
-from .utils import timestamp, make_dirs, today, singleton, archive
+from .utils import timestamp, make_dirs, today, archive
 
-cfg = CfgSingleton()
+CFG = ConfigParser(interpolation=ExtendedInterpolation())
 
 
 @register
 def _cleanup():
-    target = cfg.get("FOLDERS", "logger")
-    folders = _scan(target)
-    for folder, files in folders:
-        archive(f"{folder}.zip", files)
-        rmtree(folder)
+    try:
+        target = CFG.get("FOLDERS", "logger")
+    except (NoSectionError, NoOptionError):
+        pass
+    else:
+        folders = _scan(target)
+        for folder, files in folders:
+            archive(f"{folder}.zip", files)
+            rmtree(folder)
 
 
 def _scan(target: str):
@@ -39,6 +43,12 @@ def _scan(target: str):
             folder = join(root, folder)
             files = join(folder, "*.log")
             yield folder, (file for file in glob(files))
+
+
+def _set_cfg(instance: ConfigParser):
+    global CFG
+    if instance is not None:
+        CFG = instance
 
 
 class Handler(ABC):
@@ -100,7 +110,7 @@ class FileHandler(StreamHandler):
     def make_folder():
         _date = today()
         path = join(
-            cfg.get("FOLDERS", "logger"),
+            CFG.get("FOLDERS", "logger"),
             str(_date.year),
             _date.strftime("%B").lower(),
         )
@@ -141,7 +151,7 @@ class FileHandler(StreamHandler):
 
     def get_name(self):
         if (self._name is None) and (self._ext is None):
-            self._name, self._ext = splitext(cfg.get("LOGGER", "name", fallback="custom-lib.log"))
+            self._name, self._ext = splitext(CFG.get("LOGGER", "name", fallback="custom-lib.log"))
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
     def get_idx(self):
@@ -174,7 +184,8 @@ class BaseLogger(Handler):
         "file": FileHandler,
     }
 
-    def __init__(self):
+    def __init__(self, config: ConfigParser = None):
+        _set_cfg(config)
         self._stream_handler = None
         self._row_factory = RowFactory()
 
@@ -190,7 +201,7 @@ class BaseLogger(Handler):
         """Construct the row object and emit using the stream handler."""
 
         if self._stream_handler is None:
-            self._stream_handler = self.get_stream(cfg.get("LOGGER", "handler", fallback="console"))
+            self._stream_handler = self.get_stream(CFG.get("LOGGER", "handler", fallback="console"))
 
         with self._thread_lock:
             row = self._row_factory.build(message, exception)
@@ -200,6 +211,9 @@ class BaseLogger(Handler):
 class Logger(BaseLogger):
     """Main logging handler."""
 
+    # def __init__(self, config: ConfigParser = None):
+    #     super(Logger, self).__init__(config=config)
+
     def debug(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `DEBUG`.
@@ -207,7 +221,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
+        if CFG.getboolean("LOGGER", "debug", fallback=False) is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):
@@ -236,8 +250,3 @@ class Logger(BaseLogger):
         :param exception: Add exception info to the log message.
         """
         self.emit(message=message, exception=exception)
-
-
-@singleton
-class LogSingleton(Logger):
-    """Logging singleton."""

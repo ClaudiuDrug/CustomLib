@@ -1,78 +1,20 @@
 # -*- coding: UTF-8 -*-
 
-from configparser import ConfigParser, ExtendedInterpolation
+from configparser import ConfigParser
 from os.path import isfile
 from sys import argv
-from typing import Sequence, Generator
+from typing import Sequence
 
-from .exceptions import BadParameterError
+from .argsparser import ArgsParser
 from .handles import FileHandle
-from .utils import ensure_folder, evaluate, singleton
-
-INTERPOLATION = ExtendedInterpolation()
-CONVERTERS: dict = {
-    "list": evaluate,
-    "tuple": evaluate,
-    "set": evaluate,
-    "dict": evaluate,
-}
-
-
-class ArgsParser(object):
-    """`cmd-line` args parser."""
-
-    def __init__(self):
-        self.parameters = dict()
-
-    def parse(self, args: Sequence[str]):
-        args = (arg for arg in args)
-        return self._parse(args)
-
-    def _parse(self, args: Generator):
-        for arg in args:
-            if arg.startswith("--") is True:
-                stripped = arg.strip("-")
-                try:
-                    section, option = stripped.split("-")
-                except ValueError:
-                    raise BadParameterError(f"Inconsistency in cmd-line parameters '{arg}'!")
-                else:
-                    try:
-                        value = next(args)
-                    except StopIteration:
-                        raise BadParameterError(f"Missing value for parameter '{arg}'")
-                    else:
-                        if value.startswith("--") is False:
-                            self._update(section, option, value)
-                        else:
-                            raise BadParameterError(f"Incorrect value '{value}' for parameter '{arg}'!")
-            else:
-                raise BadParameterError(f"Inconsistency in cmd-line parameters '{arg}'!")
-        return self.parameters
-
-    def _update(self, section: str, option: str, value: str):
-        section = section.upper()
-        if section not in self.parameters:
-            self.parameters.update({section: {option: value}})
-        else:
-            section = self.parameters.get(section)
-            section.update({option: value})
+from .utils import ensure_folder
 
 
 class CfgParser(ConfigParser):
     """Configuration handle."""
 
-    def __init__(self, **kwargs):
-        global INTERPOLATION, CONVERTERS
-        if "interpolation" is kwargs:
-            INTERPOLATION = kwargs.pop("interpolation")
-        if "converters" in kwargs:
-            CONVERTERS.update(kwargs.pop("converters"))
-        super(CfgParser, self).__init__(
-            interpolation=INTERPOLATION,
-            converters=CONVERTERS,
-            **kwargs
-        )
+    def __init__(self, *args, **kwargs):
+        super(CfgParser, self).__init__(*args, **kwargs)
         self._parser = ArgsParser()
 
     def parse(self, args: Sequence[str] = None):
@@ -109,8 +51,3 @@ class CfgParser(ConfigParser):
         ensure_folder(file_path)
         with FileHandle(file_path, "w", encoding=encoding) as file_handle:
             self.write(file_handle)
-
-
-@singleton
-class CfgSingleton(CfgParser):
-    """ConfigParser singleton."""
