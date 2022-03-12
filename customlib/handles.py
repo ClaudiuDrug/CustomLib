@@ -17,6 +17,8 @@ from winerror import ERROR_NOT_LOCKED, ERROR_LOCK_VIOLATION
 
 from .exceptions import LockException
 
+_thread_lock = RLock()
+
 
 class LOCK(IntFlag):
     EX = 0x1       # exclusive lock
@@ -145,10 +147,9 @@ class AbstractHandle(ABC):
 
     def __init__(self, *args, **kwargs):
         self._args, self._kwargs = args, kwargs
-        self._thread_lock = RLock()
 
     def __enter__(self):
-        self._thread_lock.acquire()
+        _thread_lock.acquire()
         if hasattr(self, "_handle") is False:
             self._handle = self.acquire(*self._args, **self._kwargs)
         return self._handle
@@ -157,7 +158,7 @@ class AbstractHandle(ABC):
         if hasattr(self, "_handle") is True:
             self.release(self._handle)
             del self._handle
-        self._thread_lock.release()
+        _thread_lock.release()
 
     @abstractmethod
     def acquire(self, *args, **kwargs):
@@ -180,14 +181,14 @@ class FileHandle(AbstractHandle):
 
     def acquire(self, *args, **kwargs):
         """Returns a new locked file handle."""
-        with self._thread_lock:
+        with _thread_lock:
             handle = self.new(*args, **kwargs)
             self._lock(handle)
             return handle
 
     def release(self, handle: IO):
         """Close the file handle and release the resources."""
-        with self._thread_lock:
+        with _thread_lock:
             handle.flush()
             if "r" not in handle.mode:
                 fsync(handle.fileno())

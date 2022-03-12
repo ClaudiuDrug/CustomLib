@@ -11,36 +11,8 @@ A few tools for day to day work.
 <p>
 
 ```python
-from configparser import ExtendedInterpolation
-
-from customlib.cfgparser import CfgParser
-from customlib import CONVERTERS
-
-cfg = CfgParser(
-    interpolation=ExtendedInterpolation(),
-    converters=CONVERTERS
-)
-```
-
-or
-
-```python
-from os import getcwd
-from os.path import join
-
-# shared instance of CfgParser
 from customlib import cfg
-
-DIRECTORY: str = getcwd()
-CONFIG: str = join(DIRECTORY, "config.ini")
-DEFAULTS: dict = {"directory": DIRECTORY}
-
-# fallback configuration
-BACKUP: dict = {
-    "SECTION": {
-        "option": "value",
-    }
-}
+from customlib.constants import CONFIG, DEFAULTS, BACKUP
 
 # feed configuration parameters
 cfg.set_defaults(**DEFAULTS)
@@ -53,11 +25,19 @@ cfg.parse()
 # cfg.parse(["--logger-debug", "True", "--logger-handler", "console"])
 ```
 
+Constants can be overridden:
+
 - `DEFAULTS` - Holds `ConfigParser`'s default section parameters.
 - `CONFIG` - Is the configuration file set by default to your project's path.
 - `BACKUP` - Is the configuration default dictionary to which we fallback if the config file does not exist.
 
-Because it inherits from `ConfigParser` and with the help of some extra-converters we now have
+To pass cmd-line arguments:
+```
+D:\PyProjects\CustomLib> python -O .\script.py --section-option value --section-option value
+```
+cmd-line args have priority over config file and will override the cfg params.
+
+Because it inherits from `ConfigParser` and with the help of our converters we now have
 four extra methods to use in our advantage.
 
 ```python
@@ -80,8 +60,9 @@ a custom context-manager with thread & file locking abilities.
 
 ## NOTE:
 
-Documentation is not yet complete...
-More tools to be added soon...
+**Documentation is not complete...**
+
+**More tools to be added soon...**
 
 **Work in progress...**
 

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from atexit import register
-from configparser import ConfigParser, ExtendedInterpolation, NoSectionError, NoOptionError
+from configparser import ExtendedInterpolation, NoSectionError, NoOptionError
 from glob import glob
 from os import walk
 from os.path import join, exists, splitext
@@ -12,17 +12,19 @@ from threading import RLock
 from typing import Union
 
 from .callstack import info, get_level
+from .cfgparser import CfgParser
 from .constants import ROW, TRACEBACK, FRAME
 from .handles import FileHandle
 from .utils import timestamp, make_dirs, today, archive
 
-CFG = ConfigParser(interpolation=ExtendedInterpolation())
+_thread_lock = RLock()
+cfg = CfgParser(interpolation=ExtendedInterpolation())
 
 
 @register
 def _cleanup():
     try:
-        target = CFG.get("FOLDERS", "logger")
+        target = cfg.get("FOLDERS", "logger")
     except (NoSectionError, NoOptionError):
         pass
     else:
@@ -45,16 +47,14 @@ def _scan(target: str):
             yield folder, (file for file in glob(files))
 
 
-def _set_cfg(instance: ConfigParser):
-    global CFG
+def _set_cfg(instance: CfgParser):
+    global cfg
     if instance is not None:
-        CFG = instance
+        cfg = instance
 
 
 class Handler(ABC):
     """Base class for logging handlers."""
-
-    _thread_lock = RLock()
 
     @abstractmethod
     def emit(self, *args, **kwargs):
@@ -94,7 +94,7 @@ class StreamHandler(Handler):
 
     def emit(self, record: ROW):
         """Acquire a thread lock and write the log record."""
-        with self._thread_lock:
+        with _thread_lock:
             record = self._format(record)
             self.write(record)
 
@@ -110,7 +110,7 @@ class FileHandler(StreamHandler):
     def make_folder():
         _date = today()
         path = join(
-            CFG.get("FOLDERS", "logger"),
+            cfg.get("FOLDERS", "logger"),
             str(_date.year),
             _date.strftime("%B").lower(),
         )
@@ -151,7 +151,7 @@ class FileHandler(StreamHandler):
 
     def get_name(self):
         if (self._name is None) and (self._ext is None):
-            self._name, self._ext = splitext(CFG.get("LOGGER", "name", fallback="custom-lib.log"))
+            self._name, self._ext = splitext(cfg.get("LOGGER", "name", fallback="customlib.log"))
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
     def get_idx(self):
@@ -184,7 +184,7 @@ class BaseLogger(Handler):
         "file": FileHandler,
     }
 
-    def __init__(self, config: ConfigParser = None):
+    def __init__(self, config: CfgParser = None):
         _set_cfg(config)
         self._stream_handler = None
         self._row_factory = RowFactory()
@@ -201,18 +201,15 @@ class BaseLogger(Handler):
         """Construct the row object and emit using the stream handler."""
 
         if self._stream_handler is None:
-            self._stream_handler = self.get_stream(CFG.get("LOGGER", "handler", fallback="console"))
+            self._stream_handler = self.get_stream(cfg.get("LOGGER", "handler", fallback="console"))
 
-        with self._thread_lock:
+        with _thread_lock:
             row = self._row_factory.build(message, exception)
             self._stream_handler.emit(row)
 
 
 class Logger(BaseLogger):
     """Main logging handler."""
-
-    # def __init__(self, config: ConfigParser = None):
-    #     super(Logger, self).__init__(config=config)
 
     def debug(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
@@ -221,7 +218,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if CFG.getboolean("LOGGER", "debug", fallback=False) is True:
+        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):
