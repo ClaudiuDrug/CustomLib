@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-import __main__
 from collections import namedtuple
-from os.path import dirname, realpath, join
+from os.path import dirname, join
+from sys import modules
+from threading import RLock
 from weakref import WeakValueDictionary
 
+THREAD_LOCK = RLock()
 INSTANCES = WeakValueDictionary()
 
 FRAME = namedtuple("FRAME", ["file", "line", "code"])
@@ -12,7 +14,7 @@ TRACEBACK = namedtuple("TRACEBACK", ["file", "line", "code", "message"])
 ROW = namedtuple("ROW", ["time", "level", "file", "line", "code", "message"])
 
 # root directory
-DIRECTORY: str = dirname(realpath(__main__.__file__))
+DIRECTORY: str = dirname(modules["__main__"].__file__)
 
 # default config file
 CONFIG: str = join(DIRECTORY, "config", "config.ini")
@@ -29,7 +31,7 @@ BACKUP: dict = {
     },
     "LOGGER": {
         "name": "customlib.log",
-        "handler": "file",  # or `console`
+        "handler": "file",  # or "console"
         "debug": False,
     },
 }

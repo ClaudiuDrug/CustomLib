@@ -5,39 +5,12 @@ from os.path import basename
 from sys import exc_info, _getframe as get_frame
 from typing import Union
 
-from .constants import TRACEBACK, FRAME
-
-
-def info(exception: Union[BaseException, tuple, bool]) -> Union[TRACEBACK, FRAME]:
-    """
-    Get information about the most recent exception caught by an except clause
-    in the current stack frame or in an older stack frame.
-
-    :param exception: If enabled it will return info about the most recent exception caught.
-    """
-    if exception is not None:
-        try:
-            return get_traceback(exception)
-        except AttributeError:
-            pass
-
-    return get_caller(5)
+from ..constants import TRACEBACK, FRAME
 
 
 def get_level(depth: int = 3) -> str:
     """Log method (a.k.a. `LEVEL`) name getter."""
     return get_frame(depth).f_code.co_name.upper()
-
-
-def get_caller(depth: int = 0) -> FRAME:
-    """
-    Get information about the frame object from the call stack.
-
-    :param depth: Number of calls below the top of the stack.
-    :return: The file name, line number and name of code object.
-    """
-    frame = get_frame(depth)
-    return FRAME(file=get_file(frame), line=get_line(frame), code=get_code(frame))
 
 
 def get_traceback(exception: Union[BaseException, tuple, bool]) -> TRACEBACK:
@@ -58,7 +31,7 @@ def get_traceback(exception: Union[BaseException, tuple, bool]) -> TRACEBACK:
         f_lineno = exception[-1].tb_lineno
         tb_frame = exception[-1].tb_frame
     except AttributeError:
-        raise AttributeError
+        raise
     else:
         return TRACEBACK(
             file=get_file(tb_frame),
@@ -68,14 +41,20 @@ def get_traceback(exception: Union[BaseException, tuple, bool]) -> TRACEBACK:
         )
 
 
+def get_caller(depth: int = 0) -> FRAME:
+    """
+    Get information about the frame object from the call stack.
+
+    :param depth: Number of calls below the top of the stack.
+    :return: The file name, line number and name of code object.
+    """
+    frame = get_frame(depth)
+    return FRAME(file=get_file(frame), line=get_line(frame), code=get_code(frame))
+
+
 def get_file(frame) -> str:
     """Frame file name getter."""
     return basename(frame.f_code.co_filename)
-
-
-def get_line(frame) -> int:
-    """Frame line number getter."""
-    return frame.f_lineno
 
 
 def get_code(frame) -> str:
@@ -86,3 +65,8 @@ def get_code(frame) -> str:
         return frame.f_code.co_name
     else:
         return f"{co_class}.{frame.f_code.co_name}"
+
+
+def get_line(frame) -> int:
+    """Frame line number getter."""
+    return frame.f_lineno

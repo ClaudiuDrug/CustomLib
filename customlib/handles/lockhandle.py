@@ -1,23 +1,18 @@
 # -*- coding: UTF-8 -*-
 
-from abc import ABC, abstractmethod
 from enum import IntFlag
 from msvcrt import LK_UNLCK, LK_NBLCK, LK_LOCK, LK_NBRLCK, LK_RLCK, locking
-from os import fsync
 from sys import version_info
-from threading import RLock
 from typing import IO
 
 # noinspection PyUnresolvedReferences
-from pywintypes import OVERLAPPED, error as pywin_error
+from pywintypes import OVERLAPPED, error as pywintypes_error
 from win32con import LOCKFILE_FAIL_IMMEDIATELY
 # noinspection PyProtectedMember
-from win32file import LockFileEx, UnlockFileEx, _get_osfhandle
+from win32file import LockFileEx, UnlockFileEx, _get_osfhandle as get_osfhandle
 from winerror import ERROR_NOT_LOCKED, ERROR_LOCK_VIOLATION
 
-from .exceptions import LockException
-
-_thread_lock = RLock()
+from ..exceptions import LockException
 
 
 class LOCK(IntFlag):
@@ -30,15 +25,18 @@ class LOCK(IntFlag):
 class FileLock(object):
     """File locking class."""
 
-    _flags: dict = {
-        "w": LOCK.EX,
-        "a": LOCK.EX,
-        "x": LOCK.EX,
-        "r": LOCK.SH,
-    }
+    @staticmethod
+    def _flags(mode: str):
+        flags: dict = {
+            "w": LOCK.EX,
+            "a": LOCK.EX,
+            "x": LOCK.EX,
+            "r": LOCK.SH,
+        }
+        return flags.get(mode)
 
     @staticmethod
-    def _get_mode(handle: IO):
+    def _mode(handle: IO):
         """Return the `handle` mode."""
         mode = handle.mode
         return mode.strip("tb+")
@@ -66,10 +64,10 @@ class FileLock(object):
                     mode = LK_RLCK
 
             # is there any reason not to reuse the following structure?
-            file_handle = _get_osfhandle(handle.fileno())
+            file_handle = get_osfhandle(handle.fileno())
             try:
                 LockFileEx(file_handle, mode, 0, -0x10000, self.__overlapped)
-            except pywin_error as exc_value:
+            except pywintypes_error as exc_value:
                 # error: (
                 #   33, 'LockFileEx',
                 #   'The process cannot access the file because another process has locked a portion of the file.'
@@ -117,10 +115,10 @@ class FileLock(object):
             except IOError as exc:
 
                 if exc.strerror == 'Permission denied':
-                    file_handle = _get_osfhandle(handle.fileno())
+                    file_handle = get_osfhandle(handle.fileno())
                     try:
                         UnlockFileEx(file_handle, 0, -0x10000, self.__overlapped)
-                    except pywin_error as exc:
+                    except pywintypes_error as exc:
 
                         if exc.winerror == ERROR_NOT_LOCKED:
                             # error: (158, 'UnlockFileEx', 'The segment is already unlocked.')
@@ -138,69 +136,5 @@ class FileLock(object):
             raise LockException(LockException.LOCK_FAILED, exc.strerror, handle=handle)
 
     def get_flags(self, handle: IO):
-        mode = self._get_mode(handle)
-        return self._flags.get(mode)
-
-
-class AbstractHandle(ABC):
-    """Base abstract handle for all context-manager classes in this module."""
-
-    def __init__(self, *args, **kwargs):
-        self._args, self._kwargs = args, kwargs
-
-    def __enter__(self):
-        _thread_lock.acquire()
-        if hasattr(self, "_handle") is False:
-            self._handle = self.acquire(*self._args, **self._kwargs)
-        return self._handle
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self, "_handle") is True:
-            self.release(self._handle)
-            del self._handle
-        _thread_lock.release()
-
-    @abstractmethod
-    def acquire(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def release(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-class FileHandle(AbstractHandle):
-    """Simple handle with thread lock and file lock management."""
-
-    _file_lock = FileLock()
-
-    @staticmethod
-    def new(*args, **kwargs):
-        """Returns a new file handle."""
-        return open(*args, **kwargs)
-
-    def acquire(self, *args, **kwargs):
-        """Returns a new locked file handle."""
-        with _thread_lock:
-            handle = self.new(*args, **kwargs)
-            self._lock(handle)
-            return handle
-
-    def release(self, handle: IO):
-        """Close the file handle and release the resources."""
-        with _thread_lock:
-            handle.flush()
-            if "r" not in handle.mode:
-                fsync(handle.fileno())
-            self._unlock(handle)
-            handle.close()
-
-    def _lock(self, handle: IO, flags: int = None):
-        """Acquire a lock on the file handle."""
-        if flags is None:
-            flags = self._file_lock.get_flags(handle)
-        self._file_lock.lock(handle, flags)
-
-    def _unlock(self, handle: IO):
-        """Unlock the file handle before closing it."""
-        self._file_lock.unlock(handle)
+        mode = self._mode(handle)
+        return self._flags(mode)

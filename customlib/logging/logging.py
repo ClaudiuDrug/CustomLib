@@ -2,23 +2,20 @@
 
 from abc import ABC, abstractmethod
 from atexit import register
-from configparser import ExtendedInterpolation, NoSectionError, NoOptionError
+from configparser import NoSectionError, NoOptionError
 from glob import glob
 from os import walk
 from os.path import join, exists, splitext
 from shutil import rmtree
 from sys import stdout
-from threading import RLock
 from typing import Union
 
-from .callstack import info, get_level
-from .cfgparser import CfgParser
-from .constants import ROW, TRACEBACK, FRAME
-from .handles import FileHandle
-from .utils import timestamp, make_dirs, today, archive
-
-_thread_lock = RLock()
-cfg = CfgParser(interpolation=ExtendedInterpolation())
+from .callstack import get_traceback, get_caller, get_level
+from ..config import cfg
+from ..constants import THREAD_LOCK
+from ..constants import TRACEBACK, FRAME, ROW
+from ..handles import FileHandle
+from ..utils import timestamp, today, make_dirs, archive
 
 
 @register
@@ -47,14 +44,8 @@ def _scan(target: str):
             yield folder, (file for file in glob(files))
 
 
-def _set_cfg(instance: CfgParser):
-    global cfg
-    if instance is not None:
-        cfg = instance
-
-
-class Handler(ABC):
-    """Base class for logging handlers."""
+class AbstractHandler(ABC):
+    """Base handle for all logging classes."""
 
     @abstractmethod
     def emit(self, *args, **kwargs):
@@ -65,6 +56,20 @@ class RowFactory(object):
     """`ROW` builder."""
 
     @staticmethod
+    def info(exception: Union[BaseException, tuple, bool]) -> Union[TRACEBACK, FRAME]:
+        """
+        Get information about the most recent exception caught by an except clause
+        in the current stack frame or in an older stack frame.
+        """
+        if exception is not None:
+            try:
+                return get_traceback(exception)
+            except AttributeError:
+                pass
+
+        return get_caller(5)
+
+    @staticmethod
     def join(message: str, frame: Union[TRACEBACK, FRAME]) -> str:
         """Attach traceback info to `message` if `frame` is an exception."""
         if isinstance(frame, TRACEBACK) is True:
@@ -73,29 +78,36 @@ class RowFactory(object):
 
     def build(self, message: str, exception: Union[BaseException, tuple, bool]) -> ROW:
         """Construct and return a new ROW object."""
-        frame = info(exception)
+        frame = self.info(exception)
         return ROW(
-            timestamp(),
-            get_level(3),
-            frame.file,
-            frame.line,
-            frame.code,
-            self.join(message, frame)
+            time=timestamp(),
+            level=get_level(3),
+            file=frame.file,
+            line=frame.line,
+            code=frame.code,
+            message=self.join(message, frame)
         )
 
 
-class StreamHandler(Handler):
-    """Logging stream handler with thread lock management."""
+class FormatFactory(object):
+    """`ROW` formatter."""
 
     @staticmethod
-    def _format(row: ROW):
+    def _format(row: ROW) -> str:
         """Construct and return a string from the `row` object."""
         return f"[{row.time}] - {row.level} - <{row.file}, {row.line}, {row.code}>: {row.message}"
 
-    def emit(self, record: ROW):
+    def build(self, row: ROW) -> str:
+        """Construct and return a new ROW object."""
+        return self._format(row)
+
+
+class AbstractStream(AbstractHandler):
+    """Logging stream handler with thread lock management."""
+
+    def emit(self, record: str):
         """Acquire a thread lock and write the log record."""
-        with _thread_lock:
-            record = self._format(record)
+        with THREAD_LOCK:
             self.write(record)
 
     @abstractmethod
@@ -103,23 +115,33 @@ class StreamHandler(Handler):
         raise NotImplementedError
 
 
-class FileHandler(StreamHandler):
+class StdHandler(AbstractStream):
+    """Simple `stdout` handler."""
+
+    @staticmethod
+    def write(record: str):
+        """Write the log record to console and flush the handle."""
+        stdout.write(f"{record}\n")
+        stdout.flush()
+
+
+class FileHandler(AbstractStream):
     """File handler that writes log messages to disk."""
 
     @staticmethod
-    def make_folder():
-        _date = today()
+    def _make_folder_path():
+        dt = today()
         path = join(
             cfg.get("FOLDERS", "logger"),
-            str(_date.year),
-            _date.strftime("%B").lower(),
+            str(dt.year),
+            dt.strftime("%B").lower(),
         )
         make_dirs(path)
         return path
 
     def __init__(self):
         self._file_path = None
-        self._folder = None
+        self._folder_path = None
         self._name = None
         self._ext = None
         self._idx = None
@@ -133,25 +155,19 @@ class FileHandler(StreamHandler):
 
     def get_path(self):
         if self._file_path is None:
-            self._file_path = self.make_path()
-        else:
-            self.check_size()
+            self._file_path = self.make_file_path()
+        elif self._size >= ((1024 * 1024) - 1024):
+            self._file_path = self.make_file_path()
         return self._file_path
 
-    def make_path(self):
-        file_path = join(self.get_folder(), self.get_name())
-        if exists(file_path) is True:
-            return self.make_path()
-        return file_path
-
     def get_folder(self):
-        if self._folder is None:
-            self._folder = self.make_folder()
-        return self._folder
+        if self._folder_path is None:
+            self._folder_path = self._make_folder_path()
+        return self._folder_path
 
     def get_name(self):
         if (self._name is None) and (self._ext is None):
-            self._name, self._ext = splitext(cfg.get("LOGGER", "name", fallback="customlib.log"))
+            self._name, self._ext = splitext(cfg.get("LOGGER", "name"))
         return f"{today()}_{self._name}.{self.get_idx()}.{self._ext.strip('.')}"
 
     def get_idx(self):
@@ -161,55 +177,55 @@ class FileHandler(StreamHandler):
             self._idx += 1
         return self._idx
 
-    def check_size(self):
-        if self._size >= ((1024 * 1024) - 1024):
-            self._file_path = self.make_path()
+    def make_file_path(self):
+        file_path = join(self.get_folder(), self.get_name())
+        if exists(file_path) is True:
+            return self.make_file_path()
+        return file_path
 
 
-class StdHandler(StreamHandler):
-    """Simple `stdout` handler."""
+class StreamHandler(AbstractHandler):
 
     @staticmethod
-    def write(record: str):
-        """Write the log record to console and flush the handle."""
-        stdout.write(f"{record}\n")
-        stdout.flush()
-
-
-class BaseLogger(Handler):
-    """Base logging handler."""
-
-    _handlers: dict = {
-        "console": StdHandler,
-        "file": FileHandler,
-    }
-
-    def __init__(self, config: CfgParser = None):
-        _set_cfg(config)
-        self._stream_handler = None
-        self._row_factory = RowFactory()
-
-    def get_stream(self, target: str):
-        handler = self._handlers.get(target)
+    def _handlers(target: str) -> AbstractStream:
+        handlers = {
+            "file": FileHandler,
+            "console": StdHandler,
+        }
+        handler = handlers.get(target)
         return handler()
 
-    def set_stream(self, handler: Union[StdHandler, FileHandler]):
-        """Set the handler to output log messages."""
-        self._stream_handler = handler
+    def __init__(self):
+        self._handler = None
+
+    @property
+    def handler(self) -> AbstractStream:
+        if self._handler is None:
+            self._handler = self._handlers(cfg.get("LOGGER", "handler"))
+        return self._handler
+
+    def emit(self, message: str):
+        self.handler.emit(message)
+
+
+class AbstractLogger(AbstractHandler):
+    """Base logging handle."""
+
+    def __init__(self):
+        self._factory = RowFactory()
+        self._format = FormatFactory()
+        self._stream = StreamHandler()
 
     def emit(self, message: str, exception: Union[BaseException, tuple, bool]):
-        """Construct the row object and emit using the stream handler."""
-
-        if self._stream_handler is None:
-            self._stream_handler = self.get_stream(cfg.get("LOGGER", "handler", fallback="console"))
-
-        with _thread_lock:
-            row = self._row_factory.build(message, exception)
-            self._stream_handler.emit(row)
+        """Construct and stream the log message."""
+        with THREAD_LOCK:
+            row = self._factory.build(message, exception)
+            message = self._format.build(row)
+            self._stream.emit(message)
 
 
-class Logger(BaseLogger):
-    """Main logging handler."""
+class Logger(AbstractLogger):
+    """Logging class with thread and file lock ability."""
 
     def debug(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
@@ -218,7 +234,7 @@ class Logger(BaseLogger):
         :param message: The message to be logged.
         :param exception: Add exception info to the log message.
         """
-        if cfg.getboolean("LOGGER", "debug", fallback=False) is True:
+        if cfg.getboolean("LOGGER", "debug") is True:
             self.emit(message=message, exception=exception)
 
     def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):

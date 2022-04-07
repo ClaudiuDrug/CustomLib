@@ -40,7 +40,7 @@ def singleton(cls):
 
 
 def today():
-    """Return current date a `datetime.date` object."""
+    """Return current date as a `datetime.date` object."""
     return date.today()
 
 

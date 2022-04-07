@@ -2,7 +2,7 @@
 
 from typing import Sequence, Generator
 
-from .exceptions import BadParameterError
+from ..exceptions import BadParameterError
 
 
 class ArgsParser(object):
@@ -11,11 +11,8 @@ class ArgsParser(object):
     def __init__(self):
         self.parameters = dict()
 
-    def parse(self, args: Sequence[str]):
-        args = (arg for arg in args)
-        return self._parse(args)
-
-    def _parse(self, args: Generator):
+    def parse(self, args: Sequence[str]) -> dict:
+        args: Generator = (arg for arg in args)
         for arg in args:
             if arg.startswith("--") is True:
                 stripped = arg.strip("-")

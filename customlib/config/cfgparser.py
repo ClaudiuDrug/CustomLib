@@ -6,8 +6,8 @@ from sys import argv
 from typing import Sequence
 
 from .argsparser import ArgsParser
-from .handles import FileHandle
-from .utils import ensure_folder
+from ..handles import FileHandle
+from ..utils import ensure_folder
 
 
 class CfgParser(ConfigParser):
@@ -27,7 +27,7 @@ class CfgParser(ConfigParser):
             self.read_dict(dictionary=parameters, source="<cmd-line>")
 
     def set_defaults(self, **kwargs):
-        """Update `DEFAULT` section using `kwargs`."""
+        """Update `DEFAULT` section using the `kwargs`."""
         if len(kwargs) > 0:
             self._read_defaults(kwargs)
 
