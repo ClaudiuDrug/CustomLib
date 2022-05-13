@@ -1,14 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 from ast import literal_eval
-from datetime import datetime, timezone, date, timedelta
+from datetime import datetime, timezone, date
 from functools import wraps
 from os import makedirs
 from os.path import dirname, realpath, isdir, basename
 from typing import Union, Generator
 from zipfile import ZipFile
-
-from pytz import timezone as ptz
 
 from .constants import INSTANCES
 
@@ -58,48 +56,6 @@ def get_local() -> datetime:
     return utc.astimezone()
 
 
-def get_posix():
-    """POSIX timestamp as float. Number of seconds since Unix Epoch in UTC."""
-    utc = get_utc()
-    return utc.timestamp()
-
-
-def from_iso_8601(value: str):
-    naive_utc = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-    aware_utc = naive_utc.replace(tzinfo=timezone.utc)
-    aware_local = aware_utc.astimezone()
-    return format_dt(aware_local, "%Y-%m-%d %H:%M")
-
-
-def to_iso_8601(year: int, month: int, day: int, hour: int, minute: int):
-    naive = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
-    utc_aware = naive.astimezone(tz=timezone.utc)
-    return utc_aware.isoformat()
-
-
-def from_timestamp(value: int) -> datetime:
-    utc = datetime.fromtimestamp(value, tz=timezone.utc)
-    local = utc.astimezone()
-    return format_dt(local, "%Y-%m-%d %H:%M")
-
-
-def format_dt(dt: datetime, fmt: str):
-    dt_string = dt.strftime(fmt)
-    return datetime.strptime(dt_string, fmt)
-
-
-def get_offset(tz: str = None, **kwargs) -> datetime:
-    """
-    :param tz: If used it returns a localized `datetime` object. By default returns `UTC`.
-    :param kwargs: If used it returns a future or past `datetime` object.
-    """
-    dt = get_utc()
-    if tz is not None:
-        tz = ptz(tz)
-        dt = dt.astimezone(tz)
-    return dt + timedelta(**kwargs)
-
-
 def get_utc() -> datetime:
     """:returns: an UTC `datetime` object."""
     return datetime.now(timezone.utc)
@@ -117,17 +73,17 @@ def make_dirs(path: str):
         makedirs(path)
 
 
-def encode(value: Union[str, bytes]) -> bytes:
+def encode(value: Union[str, bytes], encoding: str = "UTF-8") -> bytes:
     """Encode the string `value` with UTF-8."""
-    if isinstance(value, str) is True:
-        value = value.encode("UTF-8")
+    if isinstance(value, str):
+        value = value.encode(encoding)
     return value
 
 
-def decode(value: Union[bytes, str]) -> str:
+def decode(value: Union[bytes, str], encoding: str = "UTF-8") -> str:
     """Decode the bytes-like object `value` with UTF-8."""
-    if isinstance(value, bytes) is True:
-        value = value.decode("UTF-8")
+    if isinstance(value, bytes):
+        value = value.decode(encoding)
     return value
 
 
