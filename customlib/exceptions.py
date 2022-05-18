@@ -29,3 +29,23 @@ class BaseConfigError(Exception):
 
 class BadParameterError(BaseConfigError):
     """Exception class used to signal parameters parsing errors."""
+
+
+class DatabaseError(Exception):
+    """Base class for all database related exceptions."""
+
+
+class MissingColumnsError(DatabaseError):
+    """Exception class raised for missing table columns."""
+
+
+class MissingEngineError(DatabaseError):
+    """Exception class raised for missing SQL engine."""
+
+
+class ArgumentError(DatabaseError):
+    """Exception class raised for argument related errors."""
+
+
+class SqlExecutionError(DatabaseError):
+    """Exception raised for missing execution method."""

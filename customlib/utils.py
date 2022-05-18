@@ -2,6 +2,7 @@
 
 from ast import literal_eval
 from datetime import datetime, timezone, date
+from decimal import Decimal
 from functools import wraps
 from os import makedirs
 from os.path import dirname, realpath, isdir, basename
@@ -84,6 +85,18 @@ def decode(value: Union[bytes, str], encoding: str = "UTF-8") -> str:
     """Decode the bytes-like object `value` with UTF-8."""
     if isinstance(value, bytes):
         value = value.decode(encoding)
+    return value
+
+
+def to_bytes(value: Union[Decimal, bytes], encoding: str = "UTF-8") -> bytes:
+    if isinstance(value, Decimal):
+        value = encode(str(value), encoding)
+    return value
+
+
+def to_decimal(value: Union[bytes, Decimal], encoding: str = "UTF-8") -> Decimal:
+    if isinstance(value, bytes):
+        value = Decimal(decode(value, encoding))
     return value
 
 
