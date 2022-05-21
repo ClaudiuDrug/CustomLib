@@ -25,11 +25,11 @@ register_converter("DECIMAL", to_decimal)
 class SQLite(object):
     """SQLite API client."""
 
-    def __init__(self, database: str, types: int = PARSE_COLNAMES | PARSE_DECLTYPES, thread_safe: bool = False):
+    def __init__(self, database: str, types: int = PARSE_COLNAMES | PARSE_DECLTYPES, check_thread: bool = True):
         log.debug("Acquiring a new connection with the SQLite database...")
         ensure_folder(database)
         try:
-            self.connection = connect(database, detect_types=types, check_same_thread=thread_safe)
+            self.connection = connect(database, detect_types=types, check_same_thread=check_thread)
         except Error as sql_error:
             log.error("Failed to connect with the SQLite database!", exception=sql_error)
             raise
