@@ -121,7 +121,7 @@ class Statement(ABC):
 
             kwargs.update(params)
 
-        if 0 < len(kwargs) <= len(columns):
+        if 0 <= len(kwargs) <= len(columns):
             for key, value in kwargs.items():
 
                 if key not in columns:
@@ -300,11 +300,17 @@ class Insert(Statement):
     def __call__(self, *args, **kwargs):
         kwargs = self._resolve_parameters(*args, **kwargs)
 
+        if len(kwargs) == 0:
+            # noinspection PyProtectedMember
+            kwargs = dict(self.model.columns._asdict())
+        else:
+            self.params = tuple(kwargs.values())
+
         self.fields.update({"columns": ", ".join([f'"{key}"' for key in kwargs.keys()])})
         self.fields.update({"values": ", ".join("?" * len(kwargs))})
 
         stmt = TEMPLATES.table.insert.safe_substitute(**self.fields)
-        self.statement, self.params = self._clean(stmt), tuple(kwargs.values())
+        self.statement = self._clean(stmt)
         return self
 
     def __repr__(self):
@@ -415,6 +421,12 @@ class SUM(Statement):
 
     def __call__(self):
         return f'SUM("{self.model.name}")'
+
+
+class DISTINCT(Statement):
+
+    def __call__(self):
+        return f'DISTINCT("{self.model.name}")'
 
 
 class WhereClause(Statement):

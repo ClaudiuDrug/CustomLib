@@ -50,7 +50,7 @@ class SQLite(object):
             log.debug("Connection with SQLite database terminated.")
             del self.cursor, self.connection
 
-    def query(self, sql: str, params: Iterable):
+    def query(self, sql: str, params: Iterable = None):
         """
         Try to execute any given SQL command with parameter substitution if `params` are passed.
         If error occurs database will rollback the last transaction(s) else it will commit the changes.
@@ -70,7 +70,6 @@ class SQLite(object):
         else:
             # for row in results.fetchall():
             #     yield dict(zip(row.keys(), tuple(row)))
-
             return results.fetchall()
 
     def execute(self, sql: str, params: Iterable = None):
