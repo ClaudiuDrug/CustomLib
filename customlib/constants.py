@@ -1,12 +1,15 @@
 # -*- coding: UTF-8 -*-
 
 from collections import namedtuple
+from enum import IntFlag
+from msvcrt import LK_UNLCK
 from os.path import dirname, join
 from sys import modules
-from threading import RLock
+from threading import RLock, Lock
 from weakref import WeakValueDictionary
 
-THREAD_LOCK = RLock()
+RECURSIVE_THREAD_LOCK = RLock()
+THREAD_LOCK = Lock()
 INSTANCES = WeakValueDictionary()
 
 FRAME = namedtuple("FRAME", ["file", "line", "code"])
@@ -35,3 +38,16 @@ BACKUP: dict = {
         "debug": False,
     },
 }
+
+
+class LOCK(IntFlag):
+    EX = 0x1       # exclusive lock
+    SH = 0x2       # shared lock
+    NB = 0x4       # non-blocking
+    UN = LK_UNLCK  # unlock
+
+
+class ES:
+    CONTINUOUS = 0x80000000
+    SYSTEM_REQUIRED = 0x00000001
+    DISPLAY_REQUIRED = 0x00000002

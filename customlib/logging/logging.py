@@ -12,8 +12,7 @@ from typing import Union
 
 from .callstack import get_traceback, get_caller, get_level
 from ..config import cfg
-from ..constants import THREAD_LOCK
-from ..constants import TRACEBACK, FRAME, ROW
+from ..constants import RECURSIVE_THREAD_LOCK, TRACEBACK, FRAME, ROW
 from ..handles import FileHandle
 from ..utils import timestamp, today, make_dirs, archive
 
@@ -107,7 +106,7 @@ class AbstractStream(AbstractHandler):
 
     def emit(self, record: str):
         """Acquire a thread lock and write the log record."""
-        with THREAD_LOCK:
+        with RECURSIVE_THREAD_LOCK:
             self.write(record)
 
     @abstractmethod
@@ -218,7 +217,7 @@ class AbstractLogger(AbstractHandler):
 
     def emit(self, message: str, exception: Union[BaseException, tuple, bool]):
         """Construct and stream the log message."""
-        with THREAD_LOCK:
+        with RECURSIVE_THREAD_LOCK:
             row = self._factory.build(message, exception)
             message = self._format.build(row)
             self._stream.emit(message)

@@ -5,7 +5,7 @@ from typing import IO
 
 from .core import AbstractHandle
 from .lockhandle import FileLock
-from ..constants import THREAD_LOCK
+from ..constants import RECURSIVE_THREAD_LOCK
 
 
 class FileHandle(AbstractHandle):
@@ -22,14 +22,14 @@ class FileHandle(AbstractHandle):
 
     def acquire(self, *args, **kwargs):
         """Returns a new locked file handle."""
-        with THREAD_LOCK:
+        with RECURSIVE_THREAD_LOCK:
             handle = self.new(*args, **kwargs)
             self._lock(handle)
             return handle
 
     def release(self, handle: IO):
         """Close the file handle and release the resources."""
-        with THREAD_LOCK:
+        with RECURSIVE_THREAD_LOCK:
             handle.flush()
             if "r" not in handle.mode:
                 fsync(handle.fileno())

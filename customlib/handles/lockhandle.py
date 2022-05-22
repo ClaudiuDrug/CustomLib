@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from enum import IntFlag
-from msvcrt import LK_UNLCK, LK_NBLCK, LK_LOCK, LK_NBRLCK, LK_RLCK, locking
+from msvcrt import LK_NBLCK, LK_LOCK, LK_NBRLCK, LK_RLCK, locking
 from sys import version_info
 from typing import IO
 
@@ -12,14 +11,8 @@ from win32con import LOCKFILE_FAIL_IMMEDIATELY
 from win32file import LockFileEx, UnlockFileEx, _get_osfhandle as get_osfhandle
 from winerror import ERROR_NOT_LOCKED, ERROR_LOCK_VIOLATION
 
+from ..constants import LOCK
 from ..exceptions import LockException
-
-
-class LOCK(IntFlag):
-    EX = 0x1       # exclusive lock
-    SH = 0x2       # shared lock
-    NB = 0x4       # non-blocking
-    UN = LK_UNLCK  # unlock
 
 
 class FileLock(object):

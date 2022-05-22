@@ -1,7 +1,16 @@
 # -*- coding: UTF-8 -*-
 
 from .config import CfgParser, cfg
-from .constants import THREAD_LOCK, DIRECTORY, CONFIG, DEFAULTS, BACKUP
+from .constants import (
+    RECURSIVE_THREAD_LOCK,
+    THREAD_LOCK,
+    DIRECTORY,
+    CONFIG,
+    DEFAULTS,
+    BACKUP,
+    LOCK,
+    ES
+)
 from .database import SQLite, Schema, Table, Column
 from .exceptions import (
     PasswordGetError,
@@ -12,7 +21,12 @@ from .exceptions import (
     ArgumentError,
     SqlExecutionError
 )
-from .handles import AbstractHandle, FileHandle, FileLock, LOCK
+from .handles import (
+    AbstractHandle,
+    FileHandle,
+    FileLock,
+    OsSleepInhibitor,
+)
 from .logging import Logger, log
 from .utils import (
     MetaSingleton,
@@ -35,11 +49,14 @@ from .vault import Vault, KeyVault
 __all__ = (
     "CfgParser",
     "cfg",
+    "RECURSIVE_THREAD_LOCK",
     "THREAD_LOCK",
     "DIRECTORY",
     "CONFIG",
     "DEFAULTS",
     "BACKUP",
+    "LOCK",
+    "ES",
     "SQLite",
     "Schema",
     "Table",
@@ -54,7 +71,7 @@ __all__ = (
     "AbstractHandle",
     "FileHandle",
     "FileLock",
-    "LOCK",
+    "OsSleepInhibitor",
     "Logger",
     "log",
     "MetaSingleton",

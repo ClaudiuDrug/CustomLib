@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from ..constants import THREAD_LOCK
+from ..constants import RECURSIVE_THREAD_LOCK
 
 
 class AbstractHandle(ABC):
@@ -12,7 +12,7 @@ class AbstractHandle(ABC):
         self._args, self._kwargs = args, kwargs
 
     def __enter__(self):
-        THREAD_LOCK.acquire()
+        RECURSIVE_THREAD_LOCK.acquire()
         if hasattr(self, "_handle") is False:
             self._handle = self.acquire(*self._args, **self._kwargs)
         return self._handle
@@ -21,7 +21,7 @@ class AbstractHandle(ABC):
         if hasattr(self, "_handle") is True:
             self.release(self._handle)
             del self._handle
-        THREAD_LOCK.release()
+        RECURSIVE_THREAD_LOCK.release()
 
     @abstractmethod
     def acquire(self, *args, **kwargs):
