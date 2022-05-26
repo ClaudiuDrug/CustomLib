@@ -109,18 +109,22 @@ class Schema(Model):
             create = table.create(if_not_exists)
             yield f"{create.statement};"
 
-            for index in table.indexes:
-                create = index.create(if_not_exists)
-                yield f"{create.statement};"
+            indexes = table.indexes
+            if indexes is not None:
+                for index in indexes:
+                    create = index.create(if_not_exists)
+                    yield f"{create.statement};"
 
     def _drop_sql(self, if_exists: bool) -> Generator:
         """Construct and yield a `DROP` statement for each object in the schema."""
 
         for table in self.tables:
-            for index in table.indexes:
 
-                drop = index.drop(if_exists)
-                yield f"{drop.statement};"
+            indexes = table.indexes
+            if indexes is not None:
+                for index in indexes:
+                    drop = index.drop(if_exists)
+                    yield f"{drop.statement};"
 
             drop = table.drop(if_exists)
             yield f"{drop.statement};"
