@@ -486,41 +486,45 @@ class DDL(Statement):
 
     def __init__(self, model):
         super(DDL, self).__init__(model)
-
-        self._create = Create(model)
-        self._drop = Drop(model)
+        self._create = Create
+        self._drop = Drop
 
     def create(self, if_not_exists: bool = False):
-        return self._create(if_not_exists)
+        _create = self._create(model=self.model)
+        return _create(if_not_exists)
 
     def drop(self, if_exists: bool = False):
-        return self._drop(if_exists)
+        _drop = self._drop(model=self.model)
+        return _drop(if_exists)
 
 
 class DML(Statement):
 
     def __init__(self, model):
         super(DML, self).__init__(model)
-
-        self._insert = Insert(model)
-        self._update = Update(model)
-        self._delete = Delete(model)
+        self._insert = Insert
+        self._update = Update
+        self._delete = Delete
 
     def insert(self, *args, **kwargs):
-        return self._insert(*args, **kwargs)
+        _insert = self._insert(model=self.model)
+        return _insert(*args, **kwargs)
 
     def update(self, *args, **kwargs):
-        return self._update(*args, **kwargs)
+        _update = self._update(model=self.model)
+        return _update(*args, **kwargs)
 
     def delete(self):
-        return self._delete()
+        _delete = self._delete(model=self.model)
+        return _delete()
 
 
 class DQL(Statement):
 
     def __init__(self, model):
         super(DQL, self).__init__(model)
-        self._select = Select(model)
+        self._select = Select
 
     def select(self, *args):
-        return self._select(*args)
+        _select = self._select(model=self.model)
+        return _select(*args)
