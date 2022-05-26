@@ -383,7 +383,7 @@ class Select(Statement):
                         _fields.append(f'"{arg.name}"')
 
                     elif arg.typename in ["avg", "count", "max", "min", "sum"]:
-                        _fields.append(f'"{arg.name}"')
+                        _fields.append(arg.statement)
                 else:
                     raise ArgumentError("Bad parameter passed!")
 
@@ -395,37 +395,43 @@ class Select(Statement):
 
 class AVG(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'AVG("{self.model.name}")'
 
 
 class COUNT(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'COUNT("{self.model.name}")'
 
 
 class MAX(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'MAX("{self.model.name}")'
 
 
 class MIN(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'MIN("{self.model.name}")'
 
 
 class SUM(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'SUM("{self.model.name}")'
 
 
 class DISTINCT(Statement):
 
-    def __call__(self):
+    @property
+    def statement(self) -> str:
         return f'DISTINCT("{self.model.name}")'
 
 

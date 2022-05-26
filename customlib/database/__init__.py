@@ -1,6 +1,18 @@
 # -*- coding: UTF-8 -*-
 
 from .schema import Schema, Table, Column
+from .dialect import AVG, COUNT, MAX, MIN, SUM, DISTINCT
 from .sqlite import SQLite
 
-__all__ = ['SQLite', 'Schema', 'Table', 'Column']
+__all__ = (
+    "SQLite",
+    "Schema",
+    "Table",
+    "Column",
+    "AVG",
+    "COUNT",
+    "MAX",
+    "MIN",
+    "SUM",
+    "DISTINCT"
+)

@@ -11,7 +11,18 @@ from .constants import (
     LOCK,
     ES
 )
-from .database import SQLite, Schema, Table, Column
+from .database import (
+    SQLite,
+    Schema,
+    Table,
+    Column,
+    AVG,
+    COUNT,
+    MAX,
+    MIN,
+    SUM,
+    DISTINCT
+)
 from .exceptions import (
     PasswordGetError,
     LockException,
@@ -61,6 +72,12 @@ __all__ = (
     "Schema",
     "Table",
     "Column",
+    "AVG",
+    "COUNT",
+    "MAX",
+    "MIN",
+    "SUM",
+    "DISTINCT",
     "PasswordGetError",
     "LockException",
     "BadParameterError",
