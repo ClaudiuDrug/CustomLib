@@ -238,6 +238,8 @@ class Table(Model):
         if len(self._columns) > 0:
             return self._namedtuple("Columns", **self._columns)
 
+    c = columns
+
     @property
     def indexes(self):
         if len(self._indexes) > 0:

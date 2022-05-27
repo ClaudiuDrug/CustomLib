@@ -367,25 +367,25 @@ class Select(Statement):
         }
 
     def __call__(self, *args):
+        columns = [column.name for column in self.model.columns]
         _fields = list()
 
         if len(args) == 0:
             _fields.append("*")
 
-        else:
-            for arg in args:
-                # if isinstance(arg, str):
-                #     _fields.append(arg)
+        for arg in args:
+            if (isinstance(arg, str) is True) and (arg in columns):
+                _fields.append(f'"{arg}"')
 
-                if hasattr(arg, "typename") is True:
+            elif hasattr(arg, "typename") is True:
 
-                    if arg.typename == "column":
-                        _fields.append(f'"{arg.name}"')
+                if arg.typename == "column":
+                    _fields.append(f'"{arg.name}"')
 
-                    elif arg.typename in ["avg", "count", "max", "min", "sum"]:
-                        _fields.append(arg.statement)
-                else:
-                    raise ArgumentError("Bad parameter passed!")
+                elif arg.typename in ["avg", "count", "max", "min", "sum", "group_concat"]:
+                    _fields.append(arg.statement)
+            else:
+                raise ArgumentError("Bad parameter passed!")
 
         self.fields.update({"columns": ", ".join(_fields)})
         stmt = self.template.safe_substitute(**self.fields)
@@ -393,46 +393,70 @@ class Select(Statement):
         return WhereClause(dml=self)
 
 
-class AVG(Statement):
+class Aggregate(Statement):
+    """
+    SQLite base aggregate function statement constructor.
 
-    @property
-    def statement(self) -> str:
-        return f'AVG("{self.model.name}")'
+    Example:
+        table.select(MAX(table.c.column))
 
+        Will result in: `SELECT MAX("{column-name}") FROM "{table-name}"`
+    """
 
-class COUNT(Statement):
+    def __init__(self, model, **kwargs):
+        super(Aggregate, self).__init__(model)
 
-    @property
-    def statement(self) -> str:
-        return f'COUNT("{self.model.name}")'
+        alias = kwargs.pop("alias", None)
 
+        if len(kwargs) > 0:
+            raise ArgumentError(f"Could not resolve kwargs({', '.join(list(kwargs))})!")
 
-class MAX(Statement):
+        self._statement = f'{self.typename.upper()}("{self.model.name}")'
 
-    @property
-    def statement(self) -> str:
-        return f'MAX("{self.model.name}")'
-
-
-class MIN(Statement):
-
-    @property
-    def statement(self) -> str:
-        return f'MIN("{self.model.name}")'
+        if alias is not None:
+            self._statement = f"{self._statement} AS '{alias}'"
 
 
-class SUM(Statement):
-
-    @property
-    def statement(self) -> str:
-        return f'SUM("{self.model.name}")'
+class AVG(Aggregate):
+    """AVG("{column}")"""
 
 
-class DISTINCT(Statement):
+class COUNT(Aggregate):
+    """COUNT("{column}")"""
 
-    @property
-    def statement(self) -> str:
-        return f'DISTINCT("{self.model.name}")'
+
+class MAX(Aggregate):
+    """MAX("{column}")"""
+
+
+class MIN(Aggregate):
+    """MIN("{column}")"""
+
+
+class SUM(Aggregate):
+    """SUM("{column}")"""
+
+
+class DISTINCT(Aggregate):
+    """DISTINCT("{column}")"""
+
+
+class GROUP_CONCAT(Aggregate):
+    """GROUP_CONCAT("{column}", ",")"""
+
+    def __init__(self, model, **kwargs):
+        super(GROUP_CONCAT, self).__init__(model)
+
+        alias = kwargs.pop("alias", None)
+        sep = kwargs.pop("sep", ",")
+
+        if len(kwargs) > 0:
+            raise ArgumentError(f"Could not resolve kwargs({', '.join(list(kwargs))})!")
+
+        self._statement = f'{self.typename.upper()}("{self.model.name}", "{sep}")'
+
+        if alias is not None:
+            self._statement = f"{self._statement} AS '{alias}'"
 
 
 class WhereClause(Statement):
