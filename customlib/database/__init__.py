@@ -1,7 +1,17 @@
 # -*- coding: UTF-8 -*-
 
+from .dialect import (
+    AVG,
+    COUNT,
+    MAX,
+    MIN,
+    SUM,
+    DISTINCT,
+    GROUP_CONCAT,
+    LOWER,
+    UPPER,
+)
 from .schema import Schema, Table, Column
-from .dialect import AVG, COUNT, MAX, MIN, SUM, DISTINCT, GROUP_CONCAT
 from .sqlite import SQLite
 
 __all__ = [
@@ -16,4 +26,6 @@ __all__ = [
     "SUM",
     "DISTINCT",
     "GROUP_CONCAT",
+    "LOWER",
+    "UPPER",
 ]

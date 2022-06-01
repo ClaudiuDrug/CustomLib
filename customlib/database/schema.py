@@ -8,7 +8,7 @@ from typing import Any, Generator
 
 from .dialect import DDL, DML, DQL, Comparison
 from .sqlite import SQLite
-from ..exceptions import MissingEngineError, MissingColumnsError
+from ..exceptions import MissingEngineError, MissingColumnsError, ArgumentError
 
 
 class Model(ABC):
@@ -238,8 +238,6 @@ class Table(Model):
         if len(self._columns) > 0:
             return self._namedtuple("Columns", **self._columns)
 
-    c = columns
-
     @property
     def indexes(self):
         if len(self._indexes) > 0:
@@ -259,6 +257,13 @@ class Table(Model):
     def foreign(self):
         if len(self._foreign) > 0:
             return self._namedtuple("Foreign", **self._foreign)
+
+    # why not?
+    c = columns
+    i = indexes
+    p = primary
+    a = autoincrement
+    f = foreign
 
     def create(self, if_not_exists: bool = False):
         return self.ddl.create(if_not_exists)
@@ -321,6 +326,14 @@ class Column(Model):
         self.index = kwargs.pop("index", False)
 
         self._comp = Comparison(model=self)
+
+    def __call__(self, **kwargs):
+        self.alias = kwargs.pop("alias", None)
+
+        if len(kwargs) > 0:
+            raise ArgumentError(f"Could not resolve kwargs({', '.join(list(kwargs))})!")
+
+        return self
 
     def __eq__(self, other):
         return self._comp(operator="==", value=other)

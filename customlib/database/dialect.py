@@ -29,6 +29,7 @@ TEMPLATES = SimpleNamespace(
 )
 
 COMPARISON = namedtuple("COMPARISON", ["column", "operator", "value"])
+FUNCTIONS = list()
 
 
 class Statement(ABC):
@@ -374,15 +375,33 @@ class Select(Statement):
             _fields.append("*")
 
         for arg in args:
-            if (isinstance(arg, str) is True) and (arg in columns):
-                _fields.append(f'"{arg}"')
+
+            if isinstance(arg, str) is True:
+
+                if arg in columns:
+                    _fields.append(f'"{arg}"')
+
+                elif " as " in arg.lower():
+                    values = arg.split(" ")
+
+                    if (len(values) == 3) and (values[0] in columns) and (values[1].lower() == "as"):
+                        alias = f"'{values[-1]}'"
+                        _fields.append(f'"{values[0]}" {values[1].upper()} {alias}')
+
+                # We're stopping here...
+                # If you plan on using just strings then,
+                # there's no point in using ORMs anymore... right?
 
             elif hasattr(arg, "typename") is True:
 
                 if arg.typename == "column":
-                    _fields.append(f'"{arg.name}"')
+                    if hasattr(arg, "alias"):
+                        alias = f"'{arg.alias}'"
+                        _fields.append(f'"{arg.name}" AS {alias}')
+                    else:
+                        _fields.append(f'"{arg.name}"')
 
-                elif arg.typename in ["avg", "count", "max", "min", "sum", "group_concat"]:
+                elif arg.typename in FUNCTIONS:
                     _fields.append(arg.statement)
             else:
                 raise ArgumentError("Bad parameter passed!")
@@ -405,6 +424,7 @@ class Aggregate(Statement):
 
     def __init__(self, model, **kwargs):
         super(Aggregate, self).__init__(model)
+        FUNCTIONS.append(self.typename)
 
         alias = kwargs.pop("alias", None)
 
@@ -457,6 +477,25 @@ class GROUP_CONCAT(Aggregate):
 
         if alias is not None:
             self._statement = f"{self._statement} AS '{alias}'"
+
+
+class Function(Aggregate):
+    """
+    SQLite core function statement constructor.
+
+    Example:
+        table.select(LOWER(table.c.column))
+
+        Will result in: `SELECT LOWER("{column-name}") FROM "{table-name}";`
+    """
+
+
+class LOWER(Function):
+    """LOWER("{column}")"""
+
+
+class UPPER(Function):
+    """UPPER("{column}")"""
 
 
 class WhereClause(Statement):

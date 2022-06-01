@@ -7,6 +7,7 @@ from base64 import b64encode
 from random import choice
 from string import ascii_uppercase, ascii_lowercase, digits, punctuation
 from typing import Union
+from uuid import getnode
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
@@ -48,14 +49,47 @@ class BaseVault(ABC):
     """`keyring` base handle."""
 
     @staticmethod
-    def _random(length: int) -> str:
-        """Generates a completely random string of size `length`."""
-        chars = ascii_uppercase + ascii_lowercase + digits + punctuation
-        return "".join(choice(chars) for x in range(length))
+    def _random(collection: tuple):
+        chars = choice(collection)
+        return choice(chars)
 
-    def generate(self, length: int = 16) -> str:
-        """Return a new random password of size `length`."""
-        return self._random(length)
+    @staticmethod
+    def _collection(keys: str):
+        """Return the character set(s) to be used for password generation."""
+
+        char_dict = {
+            "u": ascii_uppercase,  # ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            "l": ascii_lowercase,  # abcdefghijklmnopqrstuvwxyz
+            "d": digits,  # 0123456789
+            "p": punctuation,  # !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+        }
+
+        if keys == "*":
+            return tuple(char_dict.values())
+
+        return tuple(char_dict.get(key) for key in keys)
+
+    def generate(self, include: str = "*", exclude: str = "", length: int = 16):
+        """
+        Generate a completely random password using:
+
+        Parameters:
+            include: The character set(s) to be used when generating the password.
+            exclude: The characters to be excluded from the password.
+            length: The number of characters our password should have.
+        """
+
+        collection = self._collection(include)
+        chars = self._generator(collection, exclude)
+
+        return "".join([next(chars) for n in range(length)])
+
+    def _generator(self, collection: tuple, exclude: str):
+        while True:
+            char = self._random(collection)
+
+            if char not in exclude:
+                yield char
 
     @abstractmethod
     def get_password(self, *args, **kwargs) -> str:
@@ -104,31 +138,45 @@ class KeyVault(Vault):
     def __init__(self):
         self.__key = None
 
-    def password(self, value: str, salt: str):
+    def password(self, value: str, salt: str = None):
         """Set a new symmetrically derived encryption key."""
+        if salt is None:
+            salt = self._get_mac()
         self.__key = Symmetric(encode(salt)).key(encode(value))
-
-    def encrypt(self, value: str) -> str:
-        """Encrypt the `value` using the symmetrically derived encryption key."""
-        return decode(Fernet(self.__key).encrypt(encode(value)))
-
-    def decrypt(self, value: str) -> str:
-        """Decrypt the `value` using the symmetrically derived encryption key."""
-        try:
-            return decode(Fernet(self.__key).decrypt(encode(value)))
-        except InvalidToken as invalid_token:
-            raise invalid_token
 
     def get_password(self, service: str, username: str) -> str:
         """Fetch & decrypt a password from the keyring."""
         password = super(KeyVault, self).get_password(service=service, username=username)
         if password is not None:
             try:
-                return self.decrypt(password)
+                return self._decrypt(password)
             except InvalidToken as invalid_token:
                 raise invalid_token
 
     def set_password(self, service: str, username: str, password: str):
         """Encrypt & store a password into the keyring."""
-        password = self.encrypt(password)
+        password = self._encrypt(password)
         super(KeyVault, self).set_password(service=service, username=username, password=password)
+
+    def _encrypt(self, value: str) -> str:
+        """Encrypt the `value` using the symmetrically derived encryption key."""
+        return decode(Fernet(self.__key).encrypt(encode(value)))
+
+    def _decrypt(self, value: str) -> str:
+        """Decrypt the `value` using the symmetrically derived encryption key."""
+        try:
+            return decode(Fernet(self.__key).decrypt(encode(value)))
+        except InvalidToken as invalid_token:
+            raise invalid_token
+
+    @staticmethod
+    def _get_mac():
+        """
+        Get the hardware address as a 48-bit positive integer
+        and return its hexadecimal representation.
+
+        Note:
+            Not guaranteed to be reliable!
+        """
+        node = getnode()
+        return hex(node)
