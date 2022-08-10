@@ -1,6 +1,15 @@
+
 # customlib
 
 A few tools for day to day work.
+
+---
+
+## Installation:
+
+```shell
+python -m pip install [--upgrade] customlib
+```
 
 ---
 
@@ -11,62 +20,55 @@ A few tools for day to day work.
 <p>
 
 ```python
-from customlib.config import cfg
-from customlib.constants import CONFIG, DEFAULTS, BACKUP
-# or
-# from customlib.config import CfgParser
-# cfg = CfgParser()
+# module main.py
 
+from os.path import dirname
+from os.path import join
+from sys import modules
 
-# feeding config parameters
-cfg.set_defaults(**DEFAULTS)
+from customlib.config import get_config
+
+# main module:
+MODULE = modules.get("__main__")
+
+# root directory:
+ROOT: str = dirname(MODULE.__file__)
+
+# default config file path:
+CONFIG: str = join(ROOT, "config", "customlib.ini")
+
+# backup config params:
+BACKUP: dict = {
+    "SECTION": {
+        "option_1": "one",
+        "option_2": 2,
+        # extended interpolation (refer to `ConfigParser` documentation):
+        "option_3": r"${DEFAULT:directory}\value",
+    },
+}
+
+# by passing a value to `name` param,
+# we can have more named instances:
+cfg = get_config(name="root")
+
+# we can set default section options:
+cfg.set_defaults(directory=ROOT)
+
+# we can provide a backup dictionary
+# in case our config file does not exist
+# and a new one will be created
 cfg.open(file_path=CONFIG, encoding="UTF-8", fallback=BACKUP)
 
 # we're parsing cmd-line arguments
 cfg.parse()
 
 # we can also do this...
-# cfg.parse(["--logger-debug", "True", "--logger-handler", "file"])
-```
-
-Constants can be overridden or even better you can bring your own:
-
-- `CONFIG` - Is the configuration file set by default to your project's path.
-- `DEFAULTS` - Holds `ConfigParser`'s default section parameters.
-- `BACKUP` - Is the configuration default dictionary to which we fallback if the config file does not exist.
-
-```python
-# module: constants.py
-
-from os.path import dirname, join
-from sys import modules
-
-DIRECTORY: str = dirname(modules["__main__"].__file__)
-
-# default config file
-CONFIG: str = join(DIRECTORY, "config", "config.ini")
-
-# config default section
-DEFAULTS: dict = {
-    "directory": DIRECTORY,
-}
-
-# backup configuration
-BACKUP: dict = {
-    "FOLDERS": {
-        "logger": r"${DEFAULT:directory}\logs"
-    },
-    "LOGGER": {
-        "name": "customlib.log",
-        "handler": "console",  # or "file"
-        "debug": False,
-    },
-}
+# cfg.parse(["--section-option_1", "one", "--section-option_2", "2"])
 ```
 
 To pass cmd-line arguments:
-```
-X:\path\to\project> python -O script-name.py --section-option value --section-option value
+```shell
+  > python -O main.py --section-option value --section-option value
 ```
 cmd-line args have priority over config file and will override the cfg params.
 
@@ -80,7 +82,7 @@ some_set = cfg.getset("SECTION", "option")
 some_dict = cfg.getdict("SECTION", "option")
 ```
 
-The configuration files are read & written using `FileHandle` (see `customlib.handles`),
+The configuration files are read & written using `FileHandler` (see `customlib.filehandlers`),
 a custom context-manager with thread & file locking abilities.
 
 </p>
@@ -91,20 +93,77 @@ a custom context-manager with thread & file locking abilities.
 <p>
 
 ```python
-from customlib.logging import log
-# or
-# from customlib.logging import Logger
-# log = Logger()
+from os.path import dirname, realpath, join
+from sys import modules
+
+from customlib.logging import get_logger, Logger
+from customlib.config import get_config, CfgParser
+
+# setting configuration (for example):
+MODULE = modules.get("__main__")
+ROOT: str = dirname(realpath(MODULE.__file__))
+BACKUP: dict = {
+    "LOGGER": {
+        "basename": "customlib",  # if handler is `file`
+        "folder": r"${DEFAULT:directory}\logs",
+        "handler": "console",  # or `file`
+        "debug": False,  # if set to `True` it will also print `DEBUG` messages
+    }
+}
+
+cfg: CfgParser = get_config(name="my_config")
+cfg.set_defaults(directory=ROOT)
+cfg.read_dict(dictionary=BACKUP, source="<logging>")
+
+log: Logger = get_logger(name="my_logger", config=cfg)
+# we can pass a config instance
+```
+
+or
+
+```python
+from customlib.logging import get_logger, Logger
+
+log: Logger = get_logger(name="my_logger", config="my_config")
+# it will look for a config instance named `my_config`
+```
+
+or
+
+```python
+from customlib.logging import get_logger, Logger
+
+log: Logger = get_logger(name="my_logger", basename="customlib", handler="file", debug=True)
+# it will create and use its own config instance
 
 
 log.debug("Testing debug messages...")
 log.info("Testing info messages...")
 log.warning("Testing warning messages...")
 log.error("Testing error messages...")
+log.critical("Testing critical messages...")
 ```
 
-By default debugging is set to False and must be enabled to work.
+By default, debugging is set to False and must be enabled to work.
 See CfgParser section for this.
+
+The log file is prefixed with a date and will have an index number attached before the extension (ex: `2022-08-01_customlib.1.log`).
+When it reaches `1 Mb` the file handler will switch to another file by incrementing its index with `1`.
+
+The folder tree is by default structured as follows:
+
+```markdown
+.
+└───logs
+    └───year (ex: 2022)
+        └───month (ex: january)
+            ├───2022-08-01_customlib.1.log
+            ├───2022-08-01_customlib.2.log
+            └───2022-08-01_customlib.3.log
+```
+
+When the current month changes, a new folder is created and the previous one is archived.
+
 
 </p>
 </details>
