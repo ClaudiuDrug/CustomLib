@@ -3,8 +3,9 @@
 from configparser import ExtendedInterpolation
 
 from .cfgparser import CfgParser
-from .constants import MODULE, INSTANCES
+from .constants import INSTANCES
 from .utils import evaluate
+from ..constants import MODULE
 
 
 def get_config(**kwargs):

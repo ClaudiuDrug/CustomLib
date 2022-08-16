@@ -214,9 +214,8 @@ class Create(Syntax):
         for table in self._model.tables:
             yield table.create(if_not_exists).statement
 
-            if table.indexes is not None:
-                for index in table.indexes:
-                    yield index.create(if_not_exists).statement
+        for index in self._model.indexes:
+            yield index.create(if_not_exists).statement
 
     def _get_columns(self) -> list[str]:
         return [
@@ -344,12 +343,10 @@ class Drop(Syntax):
 
     def _drop_commands(self, if_exists: bool) -> Generator:
 
+        for index in self._model.indexes:
+            yield index.drop(if_exists).statement
+
         for table in self._model.tables:
-
-            if table.indexes is not None:
-                for index in table.indexes:
-                    yield index.drop(if_exists).statement
-
             yield table.drop(if_exists).statement
 
 
@@ -682,6 +679,7 @@ class ALL(Aggregate):
         return self.statement
 
 
+# noinspection PyPep8Naming
 @dataclass
 class GROUP_CONCAT(Aggregate):
     """

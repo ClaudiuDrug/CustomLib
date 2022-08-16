@@ -18,3 +18,11 @@ class MissingEngineError(DatabaseError):
 
 class ArgumentError(DatabaseError):
     """Exception class raised for argument related errors."""
+
+
+class DuplicateKeyError(DatabaseError):
+    """Exception raised for duplicate keys."""
+
+
+class KeyNotFoundError(DatabaseError):
+    """Exception raised for duplicate keys."""

@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from .constants import MODULE, INSTANCES
+from .constants import INSTANCES
 from .handlers import Logger
+from ..constants import MODULE
 
 
 def get_logger(**kwargs):

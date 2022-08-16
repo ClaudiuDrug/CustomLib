@@ -2,21 +2,32 @@
 
 from __future__ import annotations
 
-from typing import Generator, NewType
+from typing import Generator
 
+from .collections import Tables, Columns, Indexes, Views, Triggers
 from .dialect import DDL, DML, DQL, Comparison
 from .engine import SQLite
 from .exceptions import SQLiteIndexError, MissingColumnsError
-from .utils import single_quote, as_namedtuple
-
-# distinct types:
-Tables = NewType("Tables", as_namedtuple)
-Columns = NewType("Columns", as_namedtuple)
-Indexes = NewType("Indexes", as_namedtuple)
+from .utils import single_quote
 
 
-class BaseModel(object):
+class Model(object):
     """Base ORM model."""
+
+    @staticmethod
+    def _filter(target: str, *args, **kwargs) -> Generator:
+        """
+        Find items with attr `typename` and yield only those that match
+        `target`.
+        """
+        target: str = target.lower()  # force lowercase
+        items: tuple = args + tuple(kwargs.values())
+
+        for item in items:
+
+            if hasattr(item, "typename"):
+                if item.typename == target:
+                    yield item
 
     def __init__(self, name: str):
         self.name = name
@@ -26,36 +37,16 @@ class BaseModel(object):
         return self.__class__.__name__.lower()
 
     @property
-    def parent(self) -> BaseModel:
+    def parent(self) -> Model:
         return getattr(self, "_parent", None)
 
     @parent.setter
-    def parent(self, value: BaseModel):
+    def parent(self, value: Model):
         setattr(self, "_parent", value)
-
-
-class Model(BaseModel):
-    """ORM model."""
 
     def _add_child(self, item: Model):
         if item.parent is None:
             item.parent = self
-
-
-class CollectionModel(Model):
-    """ORM collection model."""
-
-    def _map_collection(self, target: str, *args, **kwargs) -> dict:
-        return {key: value for key, value in self._filter(target, *args, **kwargs)}
-
-    def _filter(self, target: str, *args, **kwargs) -> Generator:
-        target: str = target.lower()  # force lowercase
-        items: tuple = args + tuple(kwargs.values())
-
-        for item in items:
-            if item.typename == target:
-                self._add_child(item)
-                yield item.name, item
 
 
 class Schema(Model, DDL):
@@ -65,45 +56,71 @@ class Schema(Model, DDL):
         super(Schema, self).__init__(name=name)
 
         self.engine = kwargs.pop("engine", None)
-        self._tables = dict()
+        self.tables: Tables = Tables()
+        self.indexes: Indexes = Indexes()
 
-    @property
-    def tables(self) -> Tables:
-        return as_namedtuple("Tables", **self._tables)
+        # ************* not implemented: ************* #
 
-    def add_table(self, table: Table):
-        self._add_child(table)
-        self._tables.update({table.name: table})
+        self.views: Views = Views()
+        self.triggers: Triggers = Triggers()
+
+        # ******************************************** #
+
+    def add_table(self, item: Table):
+        self._add_child(item)
+        self.tables.insert({item.name: item})
+
+    def add_index(self, item: Index):
+        self._add_child(item)
+        self.indexes.insert({item.name: item})
+
+    # ************* not implemented: ************* #
+
+    # def add_view(self, view: View):
+    #     self._add_child(view)
+    #     self.views.insert({view.name: view})
+
+    # def add_trigger(self, trigger: Trigger):
+    #     self._add_child(trigger)
+    #     self.triggers.insert({trigger.name: trigger})
+
+    # ******************************************** #
 
     def __repr__(self):
         typename: str = self.typename.title()
         fields: tuple = (
             f"name='{self.name}'",
-            f"engine='{self.engine}'",
-            f"tables={self.tables}",
+            f"engine={self.engine}",
+            f"tables={self.tables or None}",
+            f"indexes={self.indexes or None}",
+            f"views={self.views or None}",
+            f"triggers={self.triggers or None}",
         )
         return f"{typename}({', '.join(fields)})"
 
 
-class Table(CollectionModel, DDL, DML, DQL):
+class Table(Model, DDL, DML, DQL):
     """SQLite table ORM model."""
+
+    @staticmethod
+    def _find_autoincrement(columns: Columns) -> Column:
+        for key, value in columns.items():
+            if value.autoincrement is True:
+                return value
 
     def __init__(self, name: str, schema: Schema, *args, **kwargs):
         super(Table, self).__init__(name=name)
 
         self.schema = schema
         self.temp: bool = kwargs.pop("temp", False)
-        self._columns: dict = self._map_collection("column", *args, **kwargs)
 
-        if len(self._columns) == 0:
-            raise MissingColumnsError(f"Cannot create a table '{self.name}' without any column!")
+        self.c = self.columns = Columns()
+        self.i = self.indexes = self.schema.indexes
 
-        # TODO: store indexes into schema as well
-        #  to avoid duplicate index names...
-        self._indexes: dict = self._idx_collection(*args, **kwargs)
+        self._map_columns(*args, **kwargs)
+        self._map_indexes(*args, **kwargs)
 
-        self._resolve_constraints(self._columns)
-        self.schema.add_table(table=self)
+        self.schema.add_table(self)
 
     @property
     def engine(self) -> SQLite:
@@ -113,19 +130,20 @@ class Table(CollectionModel, DDL, DML, DQL):
     def engine(self, value: SQLite):
         self.schema.engine = value
 
-    @property
-    def columns(self) -> Columns:
-        return as_namedtuple("Columns", **self._columns)
+    def add_column(self, item: Column):
+        self._add_child(item)
+        self.columns.insert({item.name: item})
 
-    @property
-    def indexes(self) -> Indexes:
-        return as_namedtuple("Indexes", **self._indexes)
+    def _map_columns(self, *args, **kwargs):
+        for column in self._filter("column", *args, **kwargs):
+            self.add_column(column)
 
-    # why not?
-    c = columns
-    i = indexes
+        if len(self.columns) == 0:
+            raise MissingColumnsError(f"Cannot create table '{self.name}' without any column!")
 
-    def _resolve_constraints(self, columns: dict):
+        self._resolve_constraints(self.columns)
+
+    def _resolve_constraints(self, columns: Columns):
         autoincrement: Column = self._find_autoincrement(columns)
 
         if autoincrement is not None:
@@ -136,51 +154,35 @@ class Table(CollectionModel, DDL, DML, DQL):
                 else:
                     value.autoincrement = value.primary = False
 
-    @staticmethod
-    def _find_autoincrement(columns: dict) -> Column:
-        for key, value in columns.items():
-            if value.autoincrement is True:
-                return value
+    def _map_indexes(self, *args, **kwargs):
+        for index in self._filter_indexed(self.columns):
+            self.schema.add_index(index)
 
-    def _idx_collection(self, *args, **kwargs) -> dict:
-        _mapped_indexes: dict = self._map_indexes(**self._columns)
-        _idx_collection: dict = self._map_collection("index", *args, **kwargs)
-
-        for name, index in _idx_collection.items():
-
-            if name in _mapped_indexes:
-                raise SQLiteIndexError(f"An index with this name '{name}' already exists!")
+        for index in self._filter("index", *args, **kwargs):
 
             for column in index.columns:
 
-                if column.name not in self._columns:
+                if column.name not in self.columns:
                     raise SQLiteIndexError(
                         f"{self.typename.title()} '{self.name}' has no such column '{column.name}'!"
                     )
 
                 if column.type.upper() == "DUMMY":
-                    column = self._columns.get(column.name)
-                    index.update_columns(column)
+                    column = self.columns.get(column.name)
+                    index.columns.update({column.name: column})
 
             if index.table is not None:
-                table_name = index.table.name if isinstance(index.table, Table) else index.table
 
-                if table_name != self.name:
-                    raise SQLiteIndexError(f"Wrong table name '{table_name}' for this index '{index.name}'!")
+                # can table be a string? we'll see...
+                if index.table.name != self.name:
+                    raise SQLiteIndexError(f"Wrong table name '{index.table.name}' for this index '{index.name}'!")
             else:
-                index.table = index.parent or self
+                index.table = self
 
-        _mapped_indexes.update(**_idx_collection)
-        return _mapped_indexes
+            self.schema.add_index(index)
 
-    def _map_indexes(self, **kwargs) -> dict:
-        return {
-            item.name: item
-            for item in self._filter_indexes(**kwargs)
-        }
-
-    def _filter_indexes(self, **kwargs) -> Generator:
-        for key, value in kwargs.items():
+    def _filter_indexed(self, columns: Columns) -> Generator:
+        for key, value in columns.items():
 
             if value.index is True:
                 index = Index(
@@ -204,12 +206,12 @@ class Table(CollectionModel, DDL, DML, DQL):
             f"name='{self.name}'",
             f"schema='{self.schema.name}'",
             f"columns={self.columns}",
-            f"indexes={self.indexes}"
         )
         return f"{typename}({', '.join(fields)})"
 
 
-class Column(BaseModel):
+# noinspection PyShadowingBuiltins
+class Column(Model):
     """SQLite column ORM model."""
 
     def __init__(self, name: str, type: str, **kwargs):
@@ -275,22 +277,36 @@ class Column(BaseModel):
         return f"{typename}({', '.join(fields)})"
 
 
-class Index(CollectionModel, DDL):
+class Index(Model, DDL):
     """SQLite `INDEX` ORM model."""
+
+    @staticmethod
+    def _filter(target: str, *args, **kwargs) -> Generator:
+        """
+        Filter and return `Column` objects.
+
+        If item is a string instance it will be converted to a `Column` object.
+        """
+        target: str = target.lower()  # force lowercase
+        items: tuple = args + tuple(kwargs.values())
+
+        for item in items:
+
+            if hasattr(item, "typename"):
+                if item.typename == target:
+                    yield item
+
+            elif isinstance(item, str):
+                yield Column(name=item, type="DUMMY")
 
     def __init__(self, name: str, *args, **kwargs):
         super(Index, self).__init__(name=name)
 
         self.table: Table = kwargs.pop("table", None)
-        self.unique = kwargs.pop("unique", False)
-        self._columns: dict = self._map_collection("column", *args, **kwargs)
+        self.unique: bool = kwargs.pop("unique", False)
+        self.c = self.columns = Columns()
 
-        if len(self._columns) == 0:
-            raise MissingColumnsError(f"Cannot create an index '{self.name}' without any column!")
-
-    @property
-    def columns(self) -> Columns:
-        return as_namedtuple("Columns", **self._columns)
+        self._map_columns(*args, **kwargs)
 
     @property
     def engine(self) -> SQLite:
@@ -300,22 +316,12 @@ class Index(CollectionModel, DDL):
     def engine(self, value: SQLite):
         self.table.engine = value
 
-    def update_columns(self, column: Column):
-        self._columns.update({column.name: column})
+    def _map_columns(self, *args, **kwargs):
+        for column in self._filter("column", *args, **kwargs):
+            self.columns.insert({column.name: column})
 
-    def _filter(self, target: str, *args, **kwargs) -> Generator:
-        """Filter and return only objects with targeted typename."""
-        target: str = target.lower()
-        items: tuple = args + tuple(kwargs.values())
-
-        for item in items:
-
-            if hasattr(item, "typename"):
-                if item.typename == target:
-                    yield item.name, item
-
-            elif isinstance(item, str):
-                yield item, Column(name=item, type="DUMMY")
+        if len(self.columns) == 0:
+            raise MissingColumnsError(f"Cannot create index '{self.name}' without any column!")
 
     def __repr__(self):
         typename: str = self.typename.title()

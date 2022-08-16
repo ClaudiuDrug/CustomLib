@@ -2,11 +2,10 @@
 
 from collections import namedtuple
 from os.path import dirname, realpath, join
-from sys import modules
 from threading import RLock
 from weakref import WeakValueDictionary
 
-MODULE = modules.get("__main__")
+from ..constants import MODULE
 
 ROOT: str = dirname(realpath(MODULE.__file__))
 FOLDER: str = join(ROOT, "logs")

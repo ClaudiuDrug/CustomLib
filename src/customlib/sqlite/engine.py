@@ -14,8 +14,9 @@ from sqlite3 import (
 )
 from typing import Iterable
 
-from .utils import ensure_folder, to_bytes, to_decimal
+from .utils import to_bytes, to_decimal
 from ..logging import get_logger, Logger
+from ..utils import ensure_folder
 
 log: Logger = get_logger(name="sqlite.logger", handler="nostream")
 
@@ -102,7 +103,7 @@ class SQLite(object):
         """
         Execute SQL statement `sql`.
         Bind values to the statement using placeholders that map to the
-        sequence `args`. If error occurs database will rollback the
+        sequence `args`. If error occurs database will roll back the
         last transaction(s) else it will commit the changes.
 
         :param sql: SQL command.
@@ -143,7 +144,7 @@ class SQLite(object):
         executed first. No other implicit transaction control is performed;
         any transaction control must be added to sql_script.
 
-        If error occurs database will rollback the last transaction(s) else it
+        If error occurs database will roll back the last transaction(s) else it
         will commit the changes.
 
         :param sql_script: SQL script.

@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from datetime import datetime, timezone
-from os import makedirs
-from os.path import dirname, realpath, isdir, basename
+from os.path import basename
 from sys import exc_info, _getframe as get_frame
 from typing import Union, Generator
 from zipfile import ZipFile
@@ -87,20 +86,8 @@ def get_local() -> datetime:
 
 
 def get_utc() -> datetime:
-    """:returns: an UTC `datetime` object."""
+    """:returns: UTC `datetime`."""
     return datetime.now(timezone.utc)
-
-
-def ensure_folder(path: str):
-    """Read the file path and recursively create the folder structure if needed."""
-    folder_path: str = dirname(realpath(path))
-    make_dirs(folder_path)
-
-
-def make_dirs(path: str):
-    """Checks if a folder path exists and creates it if not."""
-    if isdir(path) is False:
-        makedirs(path)
 
 
 def archive(file_path: str, data: Union[Generator, str]):

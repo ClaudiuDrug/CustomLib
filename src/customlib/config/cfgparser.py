@@ -6,8 +6,8 @@ from sys import argv
 from typing import Sequence
 
 from .argsparser import ArgsParser
-from .utils import ensure_folder
 from ..filehandlers import FileHandler
+from ..utils import ensure_folder
 
 
 class CfgParser(ConfigParser):
