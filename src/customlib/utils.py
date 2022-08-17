@@ -50,7 +50,10 @@ def decode(value: Union[bytes, str], encoding: str = "UTF-8") -> str:
 def ensure_folder(path: str):
     """Read the file path and recursively create the folder structure if needed."""
     folder_path: str = dirname(realpath(path))
-    make_dirs(folder_path)
+    try:
+        make_dirs(folder_path)
+    except FileExistsError:
+        pass
 
 
 def make_dirs(path: str):
