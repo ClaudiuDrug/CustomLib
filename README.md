@@ -86,9 +86,6 @@ a custom context-manager with thread & file locking abilities.
 <p>
 
 ```python
-from os.path import dirname, realpath
-from sys import modules
-
 from customlib.config import get_config, CfgParser
 from customlib.constants import ROOT
 from customlib.logging import get_logger, Logger
