@@ -16,9 +16,14 @@ class AbstractFileHandler(ABC):
 
     def __enter__(self):
         RLOCK.acquire()
-        if hasattr(self, "_handle") is False:
-            self._handle = self.acquire(*self._args, **self._kwargs)
-        return self._handle
+        try:
+            if hasattr(self, "_handle") is False:
+                self._handle = self.acquire(*self._args, **self._kwargs)
+        except FileNotFoundError:
+            RLOCK.release()
+            raise
+        else:
+            return self._handle
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if hasattr(self, "_handle") is True:
@@ -47,10 +52,16 @@ class FileHandler(AbstractFileHandler):
 
     def acquire(self, *args, **kwargs):
         """Returns a new locked file handle."""
-        with RLOCK:
+        RLOCK.acquire()
+        try:
             handle = open(*args, **kwargs)
+        except FileNotFoundError:
+            raise
+        else:
             self._file_lock.acquire(handle)
             return handle
+        finally:
+            RLOCK.release()
 
     def release(self, handle: IO):
         """Close the file handle and release the resources."""

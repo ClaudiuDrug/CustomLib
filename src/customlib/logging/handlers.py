@@ -313,7 +313,7 @@ class BaseLogger(AbstractLogHandler):
 class Logger(BaseLogger):
     """Logging class with thread and file lock ability."""
 
-    def debug(self, message: str, exception: Union[BaseException, tuple, bool] = False):
+    def debug(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `DEBUG`.
 
@@ -323,7 +323,7 @@ class Logger(BaseLogger):
         if self.cfg.getboolean("LOGGER", "debug") is True:
             self.emit(message=message, exception=exception)
 
-    def info(self, message: str, exception: Union[BaseException, tuple, bool] = False):
+    def info(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `INFO`.
 
@@ -332,7 +332,7 @@ class Logger(BaseLogger):
         """
         self.emit(message=message, exception=exception)
 
-    def warning(self, message: str, exception: Union[BaseException, tuple, bool] = False):
+    def warning(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `WARNING`.
 
@@ -341,7 +341,7 @@ class Logger(BaseLogger):
         """
         self.emit(message=message, exception=exception)
 
-    def error(self, message: str, exception: Union[BaseException, tuple, bool] = False):
+    def error(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `ERROR`.
 
@@ -350,7 +350,7 @@ class Logger(BaseLogger):
         """
         self.emit(message=message, exception=exception)
 
-    def critical(self, message: str, exception: Union[BaseException, tuple, bool] = False):
+    def critical(self, message: str, exception: Union[BaseException, tuple, bool] = None):
         """
         Log a message with level `CRITICAL`.
 
