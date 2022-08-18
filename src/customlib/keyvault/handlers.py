@@ -96,11 +96,11 @@ class BaseVault(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def set_password(self, *args, **kwargs) -> None:
+    def set_password(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def del_password(self, *args, **kwargs) -> None:
+    def del_password(self, *args, **kwargs):
         raise NotImplementedError
 
 

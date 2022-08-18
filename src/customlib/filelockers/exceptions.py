@@ -9,7 +9,7 @@ class BaseLockException(Exception):
     # Error codes:
     LOCK_FAILED = 1
 
-    def __init__(self, *args: Any, handle: Optional[IO] = None) -> None:
+    def __init__(self, *args: Any, handle: Optional[IO] = None):
         super(BaseLockException, self).__init__(*args)
 
         self.handle = handle

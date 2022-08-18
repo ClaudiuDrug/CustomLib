@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict, field
 from string import Template
-from typing import Any, Generator
+from typing import Any, Generator, List
 
 from .constants import PLACEHOLDERS, TABLE, INDEX, COLUMN
 from .engine import SQLite
@@ -217,7 +217,7 @@ class Create(Syntax):
         for index in self._model.indexes:
             yield index.create(if_not_exists).statement
 
-    def _get_columns(self) -> list[str]:
+    def _get_columns(self) -> List[str]:
         return [
             self._column_clause(column)
             for column in self._model.columns
@@ -238,7 +238,7 @@ class Create(Syntax):
 
         return self._build(TABLE.COLUMN, **fields)
 
-    def _get_constraints(self) -> list[str]:
+    def _get_constraints(self) -> List[str]:
         """Return a list of constraint clauses for this table."""
         primary: str = self._get_primary()
         foreign: list[str] = self._get_foreign()
@@ -285,7 +285,7 @@ class Create(Syntax):
         )
         return self._build(TABLE.PRIMARY, **fields)
 
-    def _get_foreign(self) -> list[str]:
+    def _get_foreign(self) -> List[str]:
         return [
             self._foreign(column)
             for column in self._model.columns

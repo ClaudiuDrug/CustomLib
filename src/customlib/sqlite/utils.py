@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from re import compile
-from typing import Any, Union, Match
+from typing import Any, Union, List, Match
 
 from ..utils import encode, decode
 
@@ -40,7 +40,7 @@ def find_substring(target: str, text: str) -> tuple:
         return result, result + len(target)
 
 
-def find_in_file(file_path: str, target_name: str, pattern: str) -> list[str]:
+def find_in_file(file_path: str, target_name: str, pattern: str) -> List[str]:
     """Search for a given pattern in file."""
     group: str = re_group(target_name, pattern)
 
@@ -52,7 +52,7 @@ def find_in_file(file_path: str, target_name: str, pattern: str) -> list[str]:
             return [item.group(target_name) for item in matches]
 
 
-def re_search(text: str, pattern: str) -> list[Match[str]]:
+def re_search(text: str, pattern: str) -> List[Match[str]]:
     """Search for a given pattern and return a list of results."""
     template = compile(pattern)
     return [item for item in template.finditer(text)]
