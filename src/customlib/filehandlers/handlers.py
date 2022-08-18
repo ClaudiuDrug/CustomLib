@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from os import fsync
 from typing import IO
 
-from .constants import RECURSIVE_THREAD_LOCK
+from ..constants import RLOCK
 from ..filelockers import FileLocker
 
 
@@ -15,7 +15,7 @@ class AbstractFileHandler(ABC):
         self._args, self._kwargs = args, kwargs
 
     def __enter__(self):
-        RECURSIVE_THREAD_LOCK.acquire()
+        RLOCK.acquire()
         if hasattr(self, "_handle") is False:
             self._handle = self.acquire(*self._args, **self._kwargs)
         return self._handle
@@ -24,7 +24,7 @@ class AbstractFileHandler(ABC):
         if hasattr(self, "_handle") is True:
             self.release(self._handle)
             del self._handle
-        RECURSIVE_THREAD_LOCK.release()
+        RLOCK.release()
 
     def __delete__(self, instance):
         instance.release()
@@ -47,14 +47,14 @@ class FileHandler(AbstractFileHandler):
 
     def acquire(self, *args, **kwargs):
         """Returns a new locked file handle."""
-        with RECURSIVE_THREAD_LOCK:
+        with RLOCK:
             handle = open(*args, **kwargs)
             self._file_lock.acquire(handle)
             return handle
 
     def release(self, handle: IO):
         """Close the file handle and release the resources."""
-        with RECURSIVE_THREAD_LOCK:
+        with RLOCK:
             handle.flush()
             if "r" not in handle.mode:
                 fsync(handle.fileno())

@@ -11,10 +11,10 @@ from shutil import rmtree
 from sys import stdout
 from typing import Union, Any, Generator
 
-from .constants import RECURSIVE_THREAD_LOCK, BACKUP, FOLDER, TRACEBACK, FRAME, ROW
+from .constants import BACKUP, FOLDER, TRACEBACK, FRAME, ROW
 from .utils import get_timestamp, get_level, get_caller, get_traceback, archive
 from ..config import get_config, CfgParser
-from ..constants import ROOT
+from ..constants import ROOT, RLOCK
 from ..filehandlers import FileHandler
 
 cfg: CfgParser = get_config(name=f"logging.defaults")
@@ -276,9 +276,9 @@ class BaseLogger(AbstractLogHandler):
 
         if exists(root):
 
-            folders = self._scan(root)
+            results = self._scan(root)
 
-            for folder, files in folders:
+            for folder, files in results:
                 archive(f"{folder}.zip", files)
                 rmtree(folder)
 
@@ -304,7 +304,7 @@ class BaseLogger(AbstractLogHandler):
                     yield folder, (file for file in glob(files))
 
     def emit(self, message: str, exception: Union[BaseException, tuple, bool]):
-        with RECURSIVE_THREAD_LOCK:
+        with RLOCK:
             row = self._factory.build(message, exception)
             message = self._format.build(row)
             self._stream.emit(message)
