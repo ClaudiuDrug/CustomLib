@@ -11,9 +11,10 @@ from shutil import rmtree
 from sys import stdout
 from typing import Union, Any, Generator
 
-from .constants import RECURSIVE_THREAD_LOCK, BACKUP, ROOT, FOLDER, TRACEBACK, FRAME, ROW
+from .constants import RECURSIVE_THREAD_LOCK, BACKUP, FOLDER, TRACEBACK, FRAME, ROW
 from .utils import get_timestamp, get_level, get_caller, get_traceback, archive
 from ..config import get_config, CfgParser
+from ..constants import ROOT
 from ..filehandlers import FileHandler
 
 cfg: CfgParser = get_config(name=f"logging.defaults")

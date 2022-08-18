@@ -1,13 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 from collections import namedtuple
-from os.path import dirname, realpath, join
+from os.path import join
 from threading import RLock
 from weakref import WeakValueDictionary
 
-from ..constants import MODULE
+from ..constants import ROOT
 
-ROOT: str = dirname(realpath(MODULE.__file__))
 FOLDER: str = join(ROOT, "logs")
 
 INSTANCES = WeakValueDictionary()

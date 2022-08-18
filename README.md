@@ -22,17 +22,10 @@ python -m pip install [--upgrade] customlib
 ```python
 # module main.py
 
-from os.path import dirname
 from os.path import join
-from sys import modules
 
-from customlib.config import get_config
-
-# main module:
-MODULE = modules.get("__main__")
-
-# root directory:
-ROOT: str = dirname(MODULE.__file__)
+from customlib.config import get_config, CfgParser
+from customlib.constants import ROOT
 
 # default config file path:
 CONFIG: str = join(ROOT, "config", "customlib.ini")
@@ -49,7 +42,7 @@ BACKUP: dict = {
 
 # by passing a value to `name` param,
 # we can have more named instances:
-cfg = get_config(name="root")
+cfg: CfgParser = get_config(name="root")
 
 # we can set default section options:
 cfg.set_defaults(directory=ROOT)
@@ -93,15 +86,14 @@ a custom context-manager with thread & file locking abilities.
 <p>
 
 ```python
-from os.path import dirname, realpath, join
+from os.path import dirname, realpath
 from sys import modules
 
-from customlib.logging import get_logger, Logger
 from customlib.config import get_config, CfgParser
+from customlib.constants import ROOT
+from customlib.logging import get_logger, Logger
 
-# setting configuration (for example):
-MODULE = modules.get("__main__")
-ROOT: str = dirname(realpath(MODULE.__file__))
+# setting configuration:
 BACKUP: dict = {
     "LOGGER": {
         "basename": "customlib",  # if handler is `file`
