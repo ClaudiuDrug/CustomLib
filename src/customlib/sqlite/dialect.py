@@ -408,6 +408,7 @@ class Delete(Syntax):
             params=self.params,
             fields=self._fields,
             template=TABLE.DELETE,
+            statement=self.statement,
         )
 
 
