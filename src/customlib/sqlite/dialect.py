@@ -8,7 +8,7 @@ from typing import Any, Generator, List
 
 from .constants import PLACEHOLDERS, TABLE, INDEX, COLUMN
 from .engine import SQLite
-from .exceptions import ArgumentError, MissingEngineError
+from .exceptions import ArgumentError, MissingEngineError, MissingParamsError
 from .utils import clean_string
 
 
@@ -362,6 +362,9 @@ class Insert(Syntax):
 
         self.params = tuple(kwargs.values())
 
+        if not kwargs:
+            kwargs = self._model.columns.copy()
+
         fields.update(
             columns=", ".join([f'"{key}"' for key in kwargs.keys()]),
             values=", ".join("?" * len(kwargs)),
@@ -369,6 +372,12 @@ class Insert(Syntax):
 
         self.statement = self._build(TABLE.INSERT, **fields)
         return self
+
+    def execute(self):
+        if len(self.params) > 0:
+            super(Insert, self).execute()
+        else:
+            raise MissingParamsError("Insert statement cannot be executed without parameters!")
 
 
 class Update(Syntax):

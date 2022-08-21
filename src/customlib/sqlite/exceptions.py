@@ -12,6 +12,10 @@ class MissingColumnsError(DatabaseError):
     """Exception raised for missing columns."""
 
 
+class MissingParamsError(DatabaseError):
+    """Exception raised for missing columns."""
+
+
 class MissingEngineError(DatabaseError):
     """Exception class raised for missing SQL engine."""
 
