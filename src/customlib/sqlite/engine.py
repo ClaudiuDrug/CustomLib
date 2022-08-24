@@ -47,14 +47,14 @@ class SQLite(object):
             instance=kwargs.pop("logger", None)
         )
 
-        log.debug("Acquiring a new connection with the SQLite database...")
+        log.debug(f"Connecting with the SQLite database '{database}'...")
         try:
             self.connection: Connection = connect(database, detect_types=detect_types, **kwargs)
         except Error as sql_error:
-            log.error("Failed to connect with the SQLite database!", exception=sql_error)
+            log.error(f"Failed to connect with the SQLite database '{database}'!", exception=sql_error)
             raise
         else:
-            log.debug("Acquired a new connection with the SQLite database.")
+            log.debug(f"Successfully connected with the SQLite database '{database}'.")
             self.connection.row_factory = Row
 
     def query(self, sql: str, *args, **kwargs):
