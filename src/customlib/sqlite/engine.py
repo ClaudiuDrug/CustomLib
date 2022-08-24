@@ -38,23 +38,24 @@ class SQLite(object):
             log = instance
 
     def __init__(self, database: str, detect_types: int = PARSE_COLNAMES | PARSE_DECLTYPES, **kwargs):
+        self._database: str = database
 
         _ensure_folder: bool = kwargs.pop("ensure_folder", False)
-        if (_ensure_folder is True) and (database != ":memory:"):
-            ensure_folder(database)
+        if (_ensure_folder is True) and (self._database != ":memory:"):
+            ensure_folder(self._database)
 
         self.set_logger(
             instance=kwargs.pop("logger", None)
         )
 
-        log.debug(f"Connecting with the SQLite database '{database}'...")
+        log.debug(f"Connecting with the SQLite database '{self._database}'...")
         try:
-            self.connection: Connection = connect(database, detect_types=detect_types, **kwargs)
+            self.connection: Connection = connect(self._database, detect_types=detect_types, **kwargs)
         except Error as sql_error:
-            log.error(f"Failed to connect with the SQLite database '{database}'!", exception=sql_error)
+            log.error(f"Failed to connect with the SQLite database '{self._database}'!", exception=sql_error)
             raise
         else:
-            log.debug(f"Successfully connected with the SQLite database '{database}'.")
+            log.debug(f"Successfully connected with the SQLite database '{self._database}'.")
             self.connection.row_factory = Row
 
     def query(self, sql: str, *args, **kwargs):
@@ -159,12 +160,12 @@ class SQLite(object):
 
     def close(self):
         """Close the connection with the sqlite database file and release the resources."""
-        log.debug("Closing the connection with the SQLite database...")
+        log.debug(f"Closing the connection with the SQLite database '{self._database}'...")
         try:
             self.connection.close()
         except Error as sql_error:
-            log.warning("Failed to close connection with the SQLite database!", exception=sql_error)
+            log.warning(f"Failed to close connection with the SQLite database '{self._database}'!", exception=sql_error)
         else:
-            log.debug("Connection with SQLite database terminated.")
+            log.debug(f"Terminated connection with the SQLite database '{self._database}'.")
         finally:
             del self.connection
