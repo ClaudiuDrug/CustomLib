@@ -12,7 +12,7 @@ class MetaSingleton(type):
     """
 
     def __call__(cls, *args, **kwargs):
-        if hasattr(cls, "_instance") is False:
+        if not hasattr(cls, "_instance"):
             cls._instance = super(MetaSingleton, cls).__call__(*args, **kwargs)
         return cls._instance
 

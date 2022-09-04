@@ -17,7 +17,7 @@ from keyring import set_password, get_password, delete_password
 from keyring.errors import PasswordSetError, PasswordDeleteError
 
 from .exceptions import PasswordGetError
-from ..utils import encode, decode
+from .utils import encode, decode
 
 
 class Symmetric(object):

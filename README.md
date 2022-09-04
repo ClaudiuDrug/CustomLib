@@ -5,153 +5,30 @@ A few tools for day to day work.
 
 ---
 
-## Installation:
+### Installation:
 
-```shell
+```commandline
 python -m pip install [--upgrade] customlib
 ```
 
 ---
 
-## Available tools:
+### Available tools:
 
 <details>
-<summary>CfgParser</summary>
+<summary>FileHandler</summary>
 <p>
 
-```python
-# module main.py
+This is a file handler that can be used as a context-manager with thread & file locking.
 
-from os.path import join
-
-from customlib.config import get_config, CfgParser
-from customlib.constants import ROOT
-
-# default config file path:
-CONFIG: str = join(ROOT, "config", "customlib.ini")
-
-# backup config params:
-BACKUP: dict = {
-    "SECTION": {
-        "option_1": "one",
-        "option_2": 2,
-        # extended interpolation (refer to `ConfigParser` documentation):
-        "option_3": r"${DEFAULT:directory}\value",
-    },
-}
-
-# by passing a value to `name` param,
-# we can have more named instances:
-cfg: CfgParser = get_config(name="root")
-
-# we can set default section options:
-cfg.set_defaults(directory=ROOT)
-
-# we can provide a backup dictionary
-# in case our config file does not exist
-# and a new one will be created
-cfg.open(file_path=CONFIG, encoding="UTF-8", fallback=BACKUP)
-
-# we're parsing cmd-line arguments
-cfg.parse()
-
-# we can also do this...
-# cfg.parse(["--section-option_1", "one", "--section-option_2", "2"])
-```
-
-To pass cmd-line arguments:
-```shell
-  > python -O main.py --section-option value --section-option value
-```
-cmd-line args have priority over config file and will override the cfg params.
-
-Because it inherits from `ConfigParser` and with the help of our converters we now have
-four extra methods to use in our advantage.
+How to:
 
 ```python
-some_list = cfg.getlist("SECTION", "option")
-some_tuple = cfg.gettuple("SECTION", "option")
-some_set = cfg.getset("SECTION", "option")
-some_dict = cfg.getdict("SECTION", "option")
+from customlib.filehandlers import FileHandler
+
+with FileHandler("some_file.txt", "a", encoding="UTF-8") as fh:
+    fh.write("Testing 'FileHandler'...")
 ```
-
-The configuration files are read & written using `FileHandler` (see `customlib.filehandlers`),
-a custom context-manager with thread & file locking abilities.
-
-</p>
-</details>
-
-<details>
-<summary>Logger</summary>
-<p>
-
-```python
-from customlib.config import get_config, CfgParser
-from customlib.constants import ROOT
-from customlib.logging import get_logger, Logger
-
-# setting configuration:
-BACKUP: dict = {
-    "LOGGER": {
-        "basename": "customlib",  # if handler is `file`
-        "folder": r"${DEFAULT:directory}\logs",
-        "handler": "console",  # or `file`
-        "debug": False,  # if set to `True` it will also print `DEBUG` messages
-    }
-}
-
-cfg: CfgParser = get_config(name="my_config")
-cfg.set_defaults(directory=ROOT)
-cfg.read_dict(dictionary=BACKUP, source="<logging>")
-
-log: Logger = get_logger(name="my_logger", config=cfg)
-# we can pass a config instance
-```
-
-or
-
-```python
-from customlib.logging import get_logger, Logger
-
-log: Logger = get_logger(name="my_logger", config="my_config")
-# it will look for a config instance named `my_config`
-```
-
-or
-
-```python
-from customlib.logging import get_logger, Logger
-
-log: Logger = get_logger(name="my_logger", basename="customlib", handler="file", debug=True)
-# it will create and use its own config instance
-
-
-log.debug("Testing debug messages...")
-log.info("Testing info messages...")
-log.warning("Testing warning messages...")
-log.error("Testing error messages...")
-log.critical("Testing critical messages...")
-```
-
-By default, debugging is set to False and must be enabled to work.
-See CfgParser section for this.
-
-The log file is prefixed with a date and will have an index number attached before the extension (ex: `2022-08-01_customlib.1.log`).
-When it reaches `1 Mb` the file handler will switch to another file by incrementing its index with `1`.
-
-The folder tree is by default structured as follows:
-
-```markdown
-.
-└───logs
-    └───year (ex: 2022)
-        └───month (ex: january)
-            ├───2022-08-01_customlib.1.log
-            ├───2022-08-01_customlib.2.log
-            └───2022-08-01_customlib.3.log
-```
-
-When the current month changes, a new folder is created and the previous one is archived.
 
 
 </p>
@@ -159,12 +36,288 @@ When the current month changes, a new folder is created and the previous one is 
 
 ---
 
-## NOTE:
+<details>
+<summary>FileLocker</summary>
+<p>
 
-**Documentation is not complete...**
+This is a file locker that can also be used as a context-manager.
 
-**More tools to be added soon...**
+How to:
 
-**Work in progress...**
+```python
+from customlib.filelockers import FileLocker, LOCK
+
+fl1 = FileLocker()
+
+if __name__ == '__main__':
+    fh1 = open("just_a_file.txt", "w", encoding="UTF-8")
+    fl1.acquire(fh1, flags=LOCK.EX)
+    fh1.write("Just testing the locking system...\n")
+    fl1.release(fh1)
+    fh1.close()
+```
+
+**Lock types:**
+- `LOCK.EX`: int (0x1), exclusive lock
+- `LOCK.SH`: int (0x2), shared lock
+
+**Lock flags:**
+- `LOCK.NB`: int (0x4), non-blocking
+
+**Manually unlock (only needed internally):**
+- `LOCK.UN`: int (0), unlock
+
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>Vault</summary>
+<p>
+
+This is a handler that makes use of keyring for password safe-keeping.
+
+How to:
+
+```python
+from customlib.keyvault import Vault
+
+vault = Vault()
+password: str = vault.generate(exclude="\'\"\\", length=16)
+vault.set_password(service="test_service", username="test_username", password=password)
+
+
+if __name__ == '__main__':
+    password: str = vault.get_password(service="test_service", username="test_username")
+    print(password)
+
+    vault.del_password(service="test_service", username="test_username")
+```
+
+`generate` params:
+* `include`: The character set(s) to be used when generating the password.
+  * `u`: ascii_uppercase
+  * `l`: ascii_lowercase
+  * `d`: digits
+  * `p`: punctuation
+* `exclude`: The characters to be excluded from the password.
+* `length`: The number of characters our password should have.
+
+This is not so different from `keyring`, after all, it is making use of its methods.
+It exists only to serve as a base class for `KeyVault`!
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>KeyVault</summary>
+<p>
+
+This is a handler that makes use of keyring for password safe-keeping using encryption.
+
+How to:
+
+```python
+from customlib.keyvault import KeyVault
+
+vault = KeyVault()
+vault.password(
+    value=vault.generate(exclude="\'\"\\", length=16),
+    salt=vault.generate(exclude="\'\"\\", length=16)
+)
+
+if __name__ == '__main__':
+    vault.set_password(service="test_service", username="test_username", password="test_password")
+
+    print(vault.get_password(service="test_service", username="test_username"))
+
+    vault.del_password(service="test_service", username="test_username")
+```
+
+`generate` params:
+* `include`: The character set(s) to be used when generating the password.
+  * `u`: ascii_uppercase
+  * `l`: ascii_lowercase
+  * `d`: digits
+  * `p`: punctuation
+* `exclude`: The characters to be excluded from the password.
+* `length`: The number of characters our password should have.
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>OsSleepInhibitor</summary>
+<p>
+
+With this handler we can prevent the operating system from going to sleep.
+
+Works in `Windows` and it might work as well in `Linux` and `Darwin` systems (not tested!).
+
+How to:
+
+```python
+from customlib.systemhandlers import OsSleepInhibitor
+
+if __name__ == '__main__':
+    with OsSleepInhibitor(keep_screen_awake=True) as osi:
+        print("I just did something that took a lot of time...")
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>MetaSingleton</summary>
+<p>
+
+Singleton metaclass for restricting `non-strict` classes to only one instance per runtime.
+
+How to:
+
+```python
+from customlib.singletons import MetaSingleton
+
+
+class TestClass(object, metaclass=MetaSingleton):
+    """test"""
+
+
+class AnotherTestClass(object):
+    """test"""
+
+
+if __name__ == '__main__':
+    a = TestClass()
+    b = TestClass()
+
+    c = AnotherTestClass()
+    d = AnotherTestClass()
+
+    print(a is b)  # --> True
+    print(c is d)  # --> False
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>singleton</summary>
+<p>
+
+Singleton decorator for `metaclass`.
+Restrict object to only one instance per runtime.
+
+How to:
+
+```python
+from customlib.singletons import singleton
+from abc import ABC
+
+
+@singleton
+class TestClass(ABC):
+    """test"""
+
+
+class AnotherTestClass(object):
+    """test"""
+
+
+if __name__ == '__main__':
+    a = TestClass()
+    b = TestClass()
+
+    c = AnotherTestClass()
+    d = AnotherTestClass()
+
+    print(a is b)  # --> True
+    print(c is d)  # --> False
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>del_prefix</summary>
+<p>
+
+If `target` starts with the `prefix` string and `prefix` is not empty, return `string[len(prefix):]`.
+Otherwise, return a copy of the original string.
+
+How to:
+
+```python
+from customlib.utils import del_prefix
+
+a = "some cool string"
+
+if __name__ == '__main__':
+    b = del_prefix(target=a, prefix="some ")
+    print(b)  # --> "cool string"
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>del_suffix</summary>
+<p>
+
+If `target` ends with the `suffix` string and `suffix` is not empty, return `string[:-len(suffix)]`.
+Otherwise, return a copy of the original string.
+
+How to:
+
+```python
+from customlib.utils import del_suffix
+
+a = "some cool string"
+
+if __name__ == '__main__':
+    b = del_suffix(target=a, suffix=" string")
+    print(b)  # --> "some cool"
+```
+
+</p>
+</details>
+
+---
+
+### WARNING:
+
+As of version `v6.0.0` the following modules are no longer in this library:
+* `logging`
+* `config`
+* `sqlite`
+
+You can install them:
+```commandline
+python -m pip install [--upgrade] logpie, cfgpie
+```
+
+`sqlite` is not yet published.
+
+The `logpie` library will require `customlib` & `cfgpie` as dependencies!
+
+---
+
+### Note:
+
+This is still work in progress!
 
 ---

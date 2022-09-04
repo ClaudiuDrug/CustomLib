@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from os import fsync
 from typing import IO
 
-from ..constants import RLOCK
+from .constants import RLOCK
 from ..filelockers import FileLocker
 
 
