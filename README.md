@@ -346,9 +346,11 @@ if __name__ == '__main__':
 ### WARNING:
 
 As of version `v6.0.0` the following modules are no longer in this library:
-* `logging` (now logpie)
-* `config` (now cfgpie)
-* `sqlite` (now sqlitepie)
+* `logging` (now [logpie](https://github.com/ClaudiuDrug/logpie))
+* `config` (now [cfgpie](https://github.com/ClaudiuDrug/cfgpie))
+* `sqlite` (now [sqlitepie](https://github.com/ClaudiuDrug/sqlitepie))
+
+> NOTE: `sqlitepie` is not yet published.
 
 You can install them:
 ```commandline
@@ -356,9 +358,7 @@ python -m pip install [--upgrade] logpie
 python -m pip install [--upgrade] cfgpie
 ```
 
-`sqlitepie` is not yet published.
-
-The `logpie` library will require `customlib` & `cfgpie` as dependencies!
+> NOTE: The `logpie` library will require `customlib` & `cfgpie` as dependencies!
 
 ---
 
