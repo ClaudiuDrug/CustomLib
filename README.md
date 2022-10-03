@@ -187,23 +187,22 @@ How to:
 from customlib.singletons import MetaSingleton
 
 
-class TestClass(object, metaclass=MetaSingleton):
-    """test"""
-
-
-class AnotherTestClass(object):
-    """test"""
+class CfgParser(object, metaclass=MetaSingleton):
+  """test"""
 
 
 if __name__ == '__main__':
-    a = TestClass()
-    b = TestClass()
+    cfg1 = CfgParser()
+    cfg2 = CfgParser()
 
-    c = AnotherTestClass()
-    d = AnotherTestClass()
+    print("*" * 80)
+    print("cfg1 == cfg2:", cfg1 == cfg2)
+    print("cfg1 is cfg2:", cfg1 is cfg2)
+```
 
-    print(a is b)  # --> True
-    print(c is d)  # --> False
+```
+cfg1 == cfg2: True
+cfg1 is cfg2: True
 ```
 
 </p>
@@ -222,27 +221,73 @@ How to:
 
 ```python
 from customlib.singletons import singleton
-from abc import ABC
 
 
 @singleton
-class TestClass(ABC):
-    """test"""
+class CfgParser(object):
+  """test"""
+
+  
+if __name__ == '__main__':
+    cfg1 = CfgParser()
+    cfg2 = CfgParser()
+
+    print("*" * 80)
+    print("cfg1 == cfg2:", cfg1 == cfg2)
+    print("cfg1 is cfg2:", cfg1 is cfg2)
+```
+
+```
+cfg1 == cfg2: True
+cfg1 is cfg2: True
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>NamedSingleton</summary>
+<p>
+
+Singleton decorator (for metaclass).
+With this class you have the option to create multiple instances by
+passing the `instance` parameter to a decorated class.
+
+How to:
+
+```python
+from customlib.singletons import NamedSingleton
 
 
-class AnotherTestClass(object):
-    """test"""
+@NamedSingleton
+class CfgParser(object):
+  """test"""
 
 
 if __name__ == '__main__':
-    a = TestClass()
-    b = TestClass()
+    cfg1 = CfgParser(instance="main")
+    cfg2 = CfgParser(instance="main")
 
-    c = AnotherTestClass()
-    d = AnotherTestClass()
+    other = CfgParser(instance="other")
 
-    print(a is b)  # --> True
-    print(c is d)  # --> False
+    print("*" * 80)
+    print("cfg1 == other:", cfg1 == other)
+    print("cfg1 is other:", cfg1 is other)
+
+    print("*" * 80)
+    print("cfg1 == cfg2:", cfg1 == cfg2)
+    print("cfg1 is cfg2:", cfg1 is cfg2)
+```
+
+```
+********************************************************************************
+cfg1 == other: False
+cfg1 is other: False
+********************************************************************************
+cfg1 == cfg2: True
+cfg1 is cfg2: True
 ```
 
 </p>
@@ -301,16 +346,17 @@ if __name__ == '__main__':
 ### WARNING:
 
 As of version `v6.0.0` the following modules are no longer in this library:
-* `logging`
-* `config`
-* `sqlite`
+* `logging` (now logpie)
+* `config` (now cfgpie)
+* `sqlite` (now sqlitepie)
 
 You can install them:
 ```commandline
-python -m pip install [--upgrade] logpie, cfgpie
+python -m pip install [--upgrade] logpie
+python -m pip install [--upgrade] cfgpie
 ```
 
-`sqlite` is not yet published.
+`sqlitepie` is not yet published.
 
 The `logpie` library will require `customlib` & `cfgpie` as dependencies!
 
