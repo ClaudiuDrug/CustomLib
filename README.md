@@ -248,54 +248,6 @@ cfg1 is cfg2: True
 ---
 
 <details>
-<summary>NamedSingleton</summary>
-<p>
-
-Singleton decorator (for metaclass).
-With this class you have the option to create multiple instances by
-passing the `instance` parameter to a decorated class.
-
-How to:
-
-```python
-from customlib.singletons import NamedSingleton
-
-
-@NamedSingleton
-class CfgParser(object):
-  """test"""
-
-
-if __name__ == '__main__':
-    cfg1 = CfgParser(instance="main")
-    cfg2 = CfgParser(instance="main")
-
-    other = CfgParser(instance="other")
-
-    print("*" * 80)
-    print("cfg1 == other:", cfg1 == other)
-    print("cfg1 is other:", cfg1 is other)
-
-    print("*" * 80)
-    print("cfg1 == cfg2:", cfg1 == cfg2)
-    print("cfg1 is cfg2:", cfg1 is cfg2)
-```
-
-```
-********************************************************************************
-cfg1 == other: False
-cfg1 is other: False
-********************************************************************************
-cfg1 == cfg2: True
-cfg1 is cfg2: True
-```
-
-</p>
-</details>
-
----
-
-<details>
 <summary>del_prefix</summary>
 <p>
 
@@ -358,7 +310,9 @@ python -m pip install [--upgrade] logpie
 python -m pip install [--upgrade] cfgpie
 ```
 
-> NOTE: The `logpie` library will require `customlib` & `cfgpie` as dependencies!
+> NOTE:
+> * The `cfgpie` library will require `customlib` as dependency!
+> * The `logpie` library will require `customlib` & `cfgpie` as dependencies!
 
 ---
 
