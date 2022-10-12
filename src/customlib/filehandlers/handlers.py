@@ -17,7 +17,7 @@ class AbstractFileHandler(ABC):
     def __enter__(self):
         RLOCK.acquire()
         try:
-            if hasattr(self, "_handle") is False:
+            if not hasattr(self, "_handle"):
                 self._handle = self.acquire(*self._args, **self._kwargs)
         except FileNotFoundError:
             RLOCK.release()
@@ -26,7 +26,7 @@ class AbstractFileHandler(ABC):
             return self._handle
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self, "_handle") is True:
+        if hasattr(self, "_handle"):
             self.release(self._handle)
             del self._handle
         RLOCK.release()

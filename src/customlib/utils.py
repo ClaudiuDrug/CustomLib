@@ -7,7 +7,7 @@ def del_prefix(target: str, prefix: str):
     return string[len(prefix):].
     Otherwise, return a copy of the original string.
     """
-    if (len(prefix) > 0) and (target.startswith(prefix) is True):
+    if (len(prefix) > 0) and target.startswith(prefix):
         try:  # python >= 3.9
             return target.removeprefix(prefix)
         except AttributeError:  # python <= 3.7
@@ -21,7 +21,7 @@ def del_suffix(target: str, suffix: str):
     return string[:-len(suffix)].
     Otherwise, return a copy of the original string.
     """
-    if (len(suffix) > 0) and (target.endswith(suffix) is True):
+    if (len(suffix) > 0) and target.endswith(suffix):
         try:  # python >= 3.9
             return target.removesuffix(suffix)
         except AttributeError:  # python <= 3.7
