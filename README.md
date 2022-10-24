@@ -302,18 +302,6 @@ As of version `v6.0.0` the following modules are no longer in this library:
 * `config` (now [cfgpie](https://github.com/ClaudiuDrug/cfgpie))
 * `sqlite` (now [sqlitepie](https://github.com/ClaudiuDrug/sqlitepie))
 
-> NOTE: `sqlitepie` is not yet published.
-
-You can install them:
-```commandline
-python -m pip install [--upgrade] logpie
-python -m pip install [--upgrade] cfgpie
-```
-
-> NOTE:
-> * The `cfgpie` library will require `customlib` as dependency!
-> * The `logpie` library will require `customlib` & `cfgpie` as dependencies!
-
 ---
 
 ### Note:

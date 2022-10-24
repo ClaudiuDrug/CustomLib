@@ -2,7 +2,7 @@
 
 from platform import system
 
-SYSTEM = system()
+SYSTEM = system().upper()
 
 
 class ES:

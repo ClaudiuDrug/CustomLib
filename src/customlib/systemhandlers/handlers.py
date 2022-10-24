@@ -35,7 +35,7 @@ class OsSleepInhibitor(AbstractOsHandler):
     Prevent OS from sleep/hibernate.
     """
 
-    if SYSTEM.upper() == "WINDOWS":
+    if SYSTEM == "WINDOWS":
         from ctypes import windll
 
         def __init__(self, keep_screen_awake: bool = False):
@@ -60,7 +60,7 @@ class OsSleepInhibitor(AbstractOsHandler):
             """Resets the flags and allows windows to enter sleep mode."""
             self.windll.kernel32.SetThreadExecutionState(ES.CONTINUOUS)
 
-    elif SYSTEM.upper() == "LINUX":
+    elif SYSTEM == "LINUX":
         from subprocess import run
 
         def __init__(self):
@@ -81,7 +81,7 @@ class OsSleepInhibitor(AbstractOsHandler):
             """Resets the flags and allows linux to enter sleep mode."""
             self.run([self._command, "unmask", *self._args])
 
-    elif SYSTEM.upper() == "DARWIN":
+    elif SYSTEM == "DARWIN":
         from subprocess import Popen, PIPE
 
         def __init__(self):
