@@ -43,11 +43,3 @@ class LOCK(IntFlag):
     SH: int = LOCK_SH  # shared lock
     NB: int = LOCK_NB  # non-blocking
     UN: int = LOCK_UN  # unlock
-
-
-FLAGS: dict = {
-    "w": LOCK.EX,
-    "a": LOCK.EX,
-    "x": LOCK.EX,
-    "r": LOCK.SH,
-}

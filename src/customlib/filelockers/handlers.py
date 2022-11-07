@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import IO
 
-from .constants import FLAGS, LOCK
+from .constants import LOCK
 from .core import lock, unlock
 from .exceptions import LockFlagsError
 
@@ -38,11 +38,12 @@ class AbstractLockHandler(ABC):
 
 class FileLocker(AbstractLockHandler):
 
-    @staticmethod
-    def _get_mode(handle: IO) -> str:
-        """Return the handle's operating mode."""
-        mode = handle.mode
-        return mode.strip("tb+")
+    __flags__: dict = {
+        "w": LOCK.EX,
+        "a": LOCK.EX,
+        "x": LOCK.EX,
+        "r": LOCK.SH,
+    }
 
     def acquire(self, handle: IO, flags: int = None) -> IO:
         """
@@ -58,7 +59,7 @@ class FileLocker(AbstractLockHandler):
         mode = self._get_mode(handle)
 
         if flags is None:
-            flags = FLAGS.get(mode)
+            flags = self.__flags__.get(mode)
 
         elif (mode == "w") and (flags in (LOCK.SH | LOCK.NB)):
             raise LockFlagsError(f"Wrong flags used on this operating mode of the handle (`{mode}`)!")
@@ -69,3 +70,9 @@ class FileLocker(AbstractLockHandler):
     def release(self, handle: IO):
         """Unlock the file handle."""
         unlock(handle)
+
+    @staticmethod
+    def _get_mode(handle: IO) -> str:
+        """Return the handle's operating mode."""
+        mode = handle.mode
+        return mode.strip("tb+")

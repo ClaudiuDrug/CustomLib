@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-from threading import RLock
+from weakref import WeakValueDictionary
 
-RLOCK: RLock = RLock()
+FILE_LOCKS = WeakValueDictionary()

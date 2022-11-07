@@ -26,8 +26,16 @@ How to:
 ```python
 from customlib.filehandlers import FileHandler
 
-with FileHandler("some_file.txt", "a", encoding="UTF-8") as fh:
-    fh.write("Testing 'FileHandler'...")
+fh = FileHandler("test_file.txt", "a", encoding="UTF-8")
+fh.write("Just testing out this cool new filehandler.\n")
+fh.close()
+```
+
+or even beter:
+
+```python
+with FileHandler("test_file.txt", "a", encoding="UTF-8") as fh:
+    fh.write("Just testing out this cool new filehandler.\n")
 ```
 
 
@@ -98,10 +106,10 @@ if __name__ == '__main__':
 
 `generate` params:
 * `include`: The character set(s) to be used when generating the password.
-  * `u`: ascii_uppercase
-  * `l`: ascii_lowercase
-  * `d`: digits
-  * `p`: punctuation
+    * `u`: ascii_uppercase
+    * `l`: ascii_lowercase
+    * `d`: digits
+    * `p`: punctuation
 * `exclude`: The characters to be excluded from the password.
 * `length`: The number of characters our password should have.
 
@@ -140,12 +148,72 @@ if __name__ == '__main__':
 
 `generate` params:
 * `include`: The character set(s) to be used when generating the password.
-  * `u`: ascii_uppercase
-  * `l`: ascii_lowercase
-  * `d`: digits
-  * `p`: punctuation
+    * `u`: ascii_uppercase
+    * `l`: ascii_lowercase
+    * `d`: digits
+    * `p`: punctuation
 * `exclude`: The characters to be excluded from the password.
 * `length`: The number of characters our password should have.
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>ClassRegistry</summary>
+<p>
+
+Immutable class registry handler.
+
+Example:
+
+```python
+from customlib.registry import ClassRegistry
+
+@ClassRegistry.register("some_name")
+class SomeClass(object):
+
+    def __init__(self, var: str):
+        self.var = var
+
+
+if __name__ == '__main__':
+    # instantiating 'SomeClass':
+    some_class = ClassRegistry.get("some_name", "var_value")
+    print(some_class.var)
+```
+
+</p>
+</details>
+
+---
+
+<details>
+<summary>MutableClassRegistry</summary>
+<p>
+
+Mutable class registry handler.
+If a key already exists in `__register__` it will be updated.
+
+
+Example:
+
+```python
+from customlib.registry import MutableClassRegistry
+
+@MutableClassRegistry.register("some_name")
+class SomeClass(object):
+
+    def __init__(self, var: str):
+        self.var = var
+
+
+if __name__ == '__main__':
+    # instantiating 'SomeClass'
+    some_class = MutableClassRegistry.get("some_name", "var_value")
+    print(some_class.var)
+```
 
 </p>
 </details>
@@ -188,7 +256,7 @@ from customlib.singletons import MetaSingleton
 
 
 class CfgParser(object, metaclass=MetaSingleton):
-  """test"""
+    """test"""
 
 
 if __name__ == '__main__':
@@ -225,9 +293,9 @@ from customlib.singletons import singleton
 
 @singleton
 class CfgParser(object):
-  """test"""
+    """test"""
 
-  
+
 if __name__ == '__main__':
     cfg1 = CfgParser()
     cfg2 = CfgParser()
